@@ -157,6 +157,18 @@ ENV/
 env.bak/
 venv.bak/
 
+# Project data and model artifacts
+data/raw/*.csv
+data/processed/
+!data/processed/.gitkeep
+models/
+!models/.gitkeep
+!models/*/.gitkeep
+!data/raw/.gitkeep
+
+# editable-install metadata
+src/*.egg-info/
+
 # Spyder project settings
 .spyderproject
 .spyproject

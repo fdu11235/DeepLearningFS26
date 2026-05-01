@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fraud"
+version = "0.1.0"
+description = "LSTM-based credit card fraud detection (DeepLearningFS26)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "numpy",
+    "scikit-learn>=1.3",
+    "imbalanced-learn",
+    "matplotlib",
+    "seaborn",
+    "statsmodels",
+    "torch>=2.0",
+    "tqdm",
+    "pyyaml",
+    "pyarrow",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

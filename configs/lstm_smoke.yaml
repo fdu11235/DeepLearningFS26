@@ -1,0 +1,22 @@
+# Smoke-test config: tiny subset, 1 epoch, CPU/GPU-agnostic. For verifying
+# the end-to-end pipeline before launching a full training run. Discard the
+# resulting model — its metrics are not meaningful.
+train_csv: data/raw/fraudTrain.csv
+test_csv: data/raw/fraudTest.csv
+out_dir: models/_smoke
+seq_len: 20
+proj_dim: 64
+hidden_size: 64
+num_layers: 1
+dropout: 0.2
+batch_size: 256
+epochs: 1
+lr: 0.001
+weight_decay: 0.00001
+grad_clip: 1.0
+early_stop_patience: 5
+use_smote: false
+val_fraction: 0.15
+seed: 42
+device: auto
+subset_frac: 0.02

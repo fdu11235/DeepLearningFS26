@@ -1,0 +1,21 @@
+name: fraud-fs26
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - scikit-learn>=1.3
+  - imbalanced-learn
+  - matplotlib
+  - seaborn
+  - statsmodels
+  - tqdm
+  - pyyaml
+  - jupyter
+  - pyarrow
+  - pytorch>=2.0
+  - pytorch-cuda=12.1
+  - pip

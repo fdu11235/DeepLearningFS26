@@ -1,0 +1,20 @@
+# Baseline LSTM configuration: BCE with pos_weight, no oversampling.
+train_csv: data/raw/fraudTrain.csv
+test_csv: data/raw/fraudTest.csv
+out_dir: models/lstm
+seq_len: 20
+proj_dim: 64
+hidden_size: 128
+num_layers: 2
+dropout: 0.3
+batch_size: 256
+epochs: 30
+lr: 0.001
+weight_decay: 0.00001
+grad_clip: 1.0
+early_stop_patience: 5
+use_smote: false
+val_fraction: 0.15
+seed: 42
+device: auto
+subset_frac: 1.0

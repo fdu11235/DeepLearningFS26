@@ -1,0 +1,21 @@
+# LSTM + sequence-level SMOTE. pos_weight is implicitly 1.0 when use_smote=true
+# (SMOTE already balances classes; combining with pos_weight would double-count).
+train_csv: data/raw/fraudTrain.csv
+test_csv: data/raw/fraudTest.csv
+out_dir: models/lstm_smote
+seq_len: 20
+proj_dim: 64
+hidden_size: 128
+num_layers: 2
+dropout: 0.3
+batch_size: 256
+epochs: 30
+lr: 0.001
+weight_decay: 0.00001
+grad_clip: 1.0
+early_stop_patience: 5
+use_smote: true
+val_fraction: 0.15
+seed: 42
+device: auto
+subset_frac: 1.0
