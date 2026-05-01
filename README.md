@@ -104,6 +104,32 @@ All metrics on the held-out **`fraudTest.csv`** (555,719 rows, 2,145 fraud / 553
 
 Headline: **LSTM lifts PR-AUC from RF's 0.51 to 0.90** and **F1 from 0.48 to 0.86**. Same pattern as the legacy notebook: SMOTE does not help — a properly class-weighted loss (`BCEWithLogitsLoss(pos_weight≈150)`) outperforms SMOTE-on-flattened-windows.
 
+## Where the gain comes from: `cc_num` as structure, not a feature
+
+This is the technical reason the LSTM beats the RF, and it's worth understanding.
+
+**Why the legacy notebook dropped `cc_num` for the RF.** With 983 unique cards and ~470k rows, the only sane way to feed `cc_num` into a tree model is target encoding (mean fraud rate per card). That gives the RF a per-cardholder fraud-history feature, which (a) memorises individual cardholders, (b) fails completely on cards never seen in training, and (c) is privacy-fraught. So the legacy RF was correctly trained as a **row-wise classifier with no card identity at all** — every transaction scored in isolation. The cost: no notion of "what's normal *for this card*". A $400 charge at 03:14 looks identical whether the card just spent the last month buying coffee or has a history of high-amount late-night purchases.
+
+**How the LSTM uses `cc_num` without re-introducing the same problem.** The LSTM also never sees the card identity as a feature — `cc_num` is **not** in `FEATURE_COLS`. Instead, `cc_num` is used purely as a **grouping key** in `src/fraud/models/lstm/sequences.py`: group transactions by card, sort each card's transactions by time, build sliding windows of length 20. The card ID itself is dropped before the tensor enters the model. So the model never learns "card 4234… has high fraud rate" — it learns shapes of behaviour over a card's recent history.
+
+```
+Row-wise RF sees (one transaction):       LSTM sees (a sequence):
+
+   ┌──────────────┐                       ┌─────────────────────────────────┐
+   │     tx_t     │                       │ tx_{t-19}, tx_{t-18}, …, tx_t   │
+   └──────────────┘                       └─────────────────────────────────┘
+   amt, merchant, hour, …                 the same card's last 20 txs in
+                                          time order, no card-ID feature
+```
+
+**Why this isn't leakage.** Three reasons:
+
+1. **In production, you always know the card number** when scoring a transaction (it's on the swipe). Grouping by `cc_num` at inference is "look up this card's recent history" — exactly what a deployed fraud system does.
+2. **The grouping carries no label information.** Only the *target* row's `is_fraud` is the label; historical rows in the window are causal (only earlier transactions, never future — see `tests/test_sequences.py::test_no_cross_card_leakage`).
+3. **Card identity never enters the model.** A fresh card the LSTM has never seen still gets a sensible prediction, just with a shorter history (left-padded). The same privacy property as the RF.
+
+So: **RF approach** = row-wise classifier, no per-card info at all. **LSTM approach** = row-wise classifier, but with the recent same-card history attached as context. The +0.39 PR-AUC comes entirely from this structural change — context that the legacy notebook explicitly noted it couldn't capture.
+
 ## How can the results be this good? (methodology audit)
 
 Sanity-checking the gap, since +0.39 PR-AUC is large:
