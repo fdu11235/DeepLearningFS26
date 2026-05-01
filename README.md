@@ -7,11 +7,11 @@ Credit card fraud detection using an LSTM trained on per-card transaction sequen
 ```
 src/fraud/         # Python package (data, preprocessing, models/lstm, evaluation, utils)
 scripts/           # CLI entrypoints (train_lstm.py, evaluate.py)
-configs/           # YAML configs for each LSTM run (lstm.yaml, lstm_smote.yaml)
+configs/           # YAML configs (lstm.yaml, lstm_smote.yaml, lstm_smoke.yaml)
 notebooks/         # 01_eda.ipynb, 02_lstm_results.ipynb (thin, import from src)
 notebooks/legacy/  # original fraud_detection_notebook.ipynb (classic-ML reference)
-data/raw/          # fraudTrain.csv, fraudTest.csv (gitignored)
-data/processed/    # cached parquet, sequence tensors, legacy_predictions.parquet (gitignored)
+data/raw/          # fraudTrain.csv, fraudTest.csv (gitignored, see "Data")
+data/processed/    # legacy_predictions.parquet, sequence caches (gitignored)
 models/            # trained model artifacts per run (gitignored)
 tests/             # pytest unit tests
 ```
@@ -22,14 +22,13 @@ tests/             # pytest unit tests
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
+pip install --upgrade pip
+
+# PyTorch with CUDA (skip if you only need CPU; default torch from PyPI is CPU)
+pip install --index-url https://download.pytorch.org/whl/cu124 torch
+
 pip install -r requirements.txt
 pip install -e .
-```
-
-For CUDA support, install PyTorch with the matching CUDA wheels:
-
-```bash
-pip install torch --index-url https://download.pytorch.org/whl/cu121
 ```
 
 ### conda
@@ -40,9 +39,25 @@ conda activate fraud-fs26
 pip install -e .
 ```
 
+Verify CUDA is picked up:
+
+```bash
+python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
+```
+
 ## Data
 
 Place `fraudTrain.csv` and `fraudTest.csv` (Kaggle "Credit Card Transactions Fraud Detection Dataset") under `data/raw/`. They are gitignored.
+
+## Quick smoke test (~30 seconds)
+
+Verify the pipeline end-to-end on a 2% subset for 1 epoch before launching full training:
+
+```bash
+python scripts/train_lstm.py --config configs/lstm_smoke.yaml
+```
+
+Discard the resulting model — its metrics aren't meaningful, this only checks that loading, preprocessing, sequence building, and training all work on your machine.
 
 ## Train
 
@@ -54,18 +69,17 @@ python scripts/train_lstm.py --config configs/lstm.yaml
 python scripts/train_lstm.py --config configs/lstm_smote.yaml
 ```
 
-Artifacts are written to `models/lstm/` and `models/lstm_smote/` respectively (`model.pt`, `preprocessor.pkl`, `threshold.json`, `metrics.json`, `training_log.csv`).
+Artifacts go to `models/lstm/` and `models/lstm_smote/`: `model.pt`, `preprocessor.pkl`, `threshold.json`, `metrics.json`, `training_log.csv`, `test_predictions.npz`. Training on a single GPU (RTX 4070 Ti class) takes well under an hour.
 
 ## Evaluate and compare against classic baselines
 
 ```bash
-python scripts/evaluate.py \
-    --lstm models/lstm \
-    --lstm-smote models/lstm_smote \
-    --legacy-predictions data/processed/legacy_predictions.parquet
+python scripts/evaluate.py
 ```
 
-This prints a side-by-side metrics table and McNemar p-values. The four classic baselines (SVM, RF, SVM+SMOTE, RF+SMOTE) come from `notebooks/legacy/fraud_detection_notebook.ipynb` — re-run its final cell to (re)create `legacy_predictions.parquet`.
+Prints a side-by-side metrics table for both LSTM configs and runs McNemar tests against the classic baselines if `data/processed/legacy_predictions.parquet` exists.
+
+To produce that parquet: open `notebooks/legacy/fraud_detection_notebook.ipynb`, run the whole notebook, and run the final export cell. (The notebook's CSV paths were updated to read from `../../data/raw/` for its new location.)
 
 ## Tests
 

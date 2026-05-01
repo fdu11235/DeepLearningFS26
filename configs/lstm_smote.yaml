@@ -15,6 +15,11 @@ weight_decay: 0.00001
 grad_clip: 1.0
 early_stop_patience: 5
 use_smote: true
+# Generate enough synthetic positives to make the minority class equal 10% of
+# the majority. "auto" (full balance) was OOM-ing on a 16 GB WSL machine —
+# the flattened-window SMOTE step would peak at ~8-10 GB just for the
+# resampled tensor before the reshape back to (N, L, F).
+smote_sampling_strategy: 0.1
 val_fraction: 0.15
 seed: 42
 device: auto

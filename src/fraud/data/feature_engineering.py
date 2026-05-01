@@ -42,6 +42,13 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     `trans_date_trans_time` so the LSTM can build temporal sequences."""
     df = df.copy()
 
+    # The raw CSVs occasionally carry a trailing malformed row whose target
+    # is NaN. Drop those — they would corrupt loss / metrics downstream.
+    n_before = len(df)
+    df = df.dropna(subset=["is_fraud"]).reset_index(drop=True)
+    if len(df) < n_before:
+        pass  # logged by caller if needed
+
     if not pd.api.types.is_datetime64_any_dtype(df["trans_date_trans_time"]):
         df["trans_date_trans_time"] = pd.to_datetime(df["trans_date_trans_time"])
 
