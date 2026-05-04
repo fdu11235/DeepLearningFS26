@@ -157,16 +157,15 @@ ENV/
 env.bak/
 venv.bak/
 
-# Project data and model artifacts
+# Project data
 # Leading slashes anchor these to the repo root so we don't accidentally
 # ignore src/fraud/models/ (the Python package).
 /data/raw/*.csv
+!/data/raw/.gitkeep
 /data/processed/
 !/data/processed/.gitkeep
-/models/
-!/models/.gitkeep
-!/models/*/.gitkeep
-!/data/raw/.gitkeep
+# Trained model artifacts under /models/ ARE tracked (small, ~11 MB total,
+# enables reproducing the comparison table without re-running training).
 
 # editable-install metadata
 src/*.egg-info/
