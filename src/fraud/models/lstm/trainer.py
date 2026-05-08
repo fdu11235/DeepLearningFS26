@@ -57,6 +57,7 @@ class TrainConfig:
     seed: int = 42
     device: str = "auto"
     subset_frac: float = 1.0
+    pos_weight_override: float | None = None
 
 
 def _resolve_device(device: str) -> torch.device:
@@ -159,14 +160,21 @@ def train_lstm(cfg: TrainConfig) -> dict[str, Any]:
             random_state=cfg.seed,
             sampling_strategy=cfg.smote_sampling_strategy,
         )
-        pos_weight = torch.tensor([1.0], device=device)
+        default_pos_weight = 1.0
     else:
         train_X, train_y, train_lengths = train_seq.X, train_seq.y, train_seq.lengths
         n_pos = int(train_y.sum())
         n_neg = int(len(train_y) - n_pos)
-        pos_weight_value = (n_neg / max(n_pos, 1)) if n_pos > 0 else 1.0
-        pos_weight = torch.tensor([pos_weight_value], device=device)
-        logger.info("pos_weight = %.2f (neg=%d, pos=%d)", pos_weight_value, n_neg, n_pos)
+        default_pos_weight = (n_neg / max(n_pos, 1)) if n_pos > 0 else 1.0
+        logger.info("class counts (neg=%d, pos=%d)", n_neg, n_pos)
+
+    if cfg.pos_weight_override is not None:
+        pos_weight_value = float(cfg.pos_weight_override)
+        logger.info("pos_weight = %.2f (override)", pos_weight_value)
+    else:
+        pos_weight_value = default_pos_weight
+        logger.info("pos_weight = %.2f", pos_weight_value)
+    pos_weight = torch.tensor([pos_weight_value], device=device)
 
     train_ds = SequenceDataset(train_X, train_y, train_lengths)
     val_ds = SequenceDataset(val_seq.X, val_seq.y, val_seq.lengths)

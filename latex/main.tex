@@ -225,7 +225,7 @@ This design allows us to assess not only whether an LSTM improves fraud detectio
 \end{figure}
 
 \section{Dataset Description}
-\label{sec:eda}
+\label{sec:dataset_description}
 
 The analysis is conducted on a publicly available credit card transaction dataset obtained from Kaggle \parencite{kaggle_fraud_detection_dataset}. The dataset is provided as two separate files, \texttt{fraudTrain.csv} and \texttt{fraudTest.csv}, which are temporally disjoint and share an identical feature schema.  Together, the two files correspond to an approximate 70/30 split between development and test data.
 
@@ -392,7 +392,9 @@ These transformations are implemented within a single pipeline object, such that
 
 \subsection{Model Selection versus Final Evaluation}
 
-The internal validation set is used for model selection. In particular, for the Support Vector Machine model we tune the regularization parameter \(C\) on the validation data, while for the Random Forest model we explore key structural hyperparameters such as tree depth, minimum leaf size, and the number of features considered at each split. In both cases, the selected configuration maximizes the chosen validation metric. For both models, hyperparameter selection is based on probability-based validation metrics, with particular emphasis on precision–recall performance due to extreme class imbalance. After selecting the best configuration, we report two sets of results:
+The internal validation set is used for model selection. For the LSTM, hyperparameter selection focuses on the optimiser learning rate and the dropout rate, which are the two settings most directly associated with sequential learning and generalisation under class imbalance. The remaining structural hyperparameters, such as the hidden size, the number of recurrent layers, the projection dimension, the sequence length, and the batch size, are held fixed at values motivated in Section~\ref{sec:lstm}. Hyperparameter selection is based on validation PR-AUC, which is preferred over ROC-AUC and accuracy because it directly reflects ranking quality on the minority class. The exact grid and selection procedure are documented in Section~\ref{subsec:lstm_grid}.
+
+After selecting the best configuration, we report two sets of results:
 \begin{itemize}
     \item \textbf{Internal validation performance} on \((X_{\text{val}}, y_{\text{val}})\), which reflects model selection quality within the development sample,
     \item \textbf{External test performance} on \((X_{\text{test}}, y_{\text{test}})\), which reflects final generalization to unseen and temporally separated data.
@@ -402,7 +404,25 @@ This separation between development and final evaluation is critical in fraud de
 \section{Handling Class Imbalance}
 \label{sec:imbalance}
 
-Class imbalance poses a significant challenge for supervised learning algorithms, as standard classifiers tend to be biased toward the majority class. To address this issue, we apply the Synthetic Minority Over-sampling Technique (SMOTE), originally proposed by \textcite{chawla_smote_2002}, which generates artificial minority class samples via interpolation in feature space.
+Class imbalance poses a significant challenge for supervised learning algorithms, as standard classifiers tend to be biased toward the majority class. To examine which interventions, if any, are needed in the present setting, we evaluate three complementary training regimes: training on the imbalanced data with plain binary cross-entropy (no explicit imbalance handling), training with cost-sensitive binary cross-entropy that reweights the positive-class term in the loss, and training on a SMOTE-resampled version of the input sequences. The latter two are described in detail below; their empirical comparison against the no-intervention reference is reported in Section~\ref{subsec:smote}.
+
+\subsection{Cost-sensitive Loss}
+\label{subsec:cost_sensitive_loss}
+
+The primary imbalance-handling mechanism in this study is a cost-sensitive binary cross-entropy loss. For a logit $z$ and a binary label $y \in \{0, 1\}$, the per-sample loss is
+\begin{equation}
+\mathcal{L}(z, y) \;=\; -\,w_{+}\, y \,\log \sigma(z) \;-\; (1 - y)\, \log\!\big(1 - \sigma(z)\big),
+\end{equation}
+where $\sigma(\cdot)$ denotes the logistic function and $w_{+}$ is a positive-class weight that scales the penalty incurred when a fraudulent transaction is missed. Following the standard cost-sensitive convention, the weight is set to the empirical class ratio
+\begin{equation}
+w_{+} \;=\; \frac{N_{\text{neg}}}{N_{\text{pos}}},
+\end{equation}
+which makes the contribution of the minority class to the loss approximately equal to that of the majority class. On the training subset constructed in Section~\ref{sec:data_split}, this yields $w_{+} \approx 150$. This formulation is implemented as PyTorch's \texttt{BCEWithLogitsLoss} with the \texttt{pos\_weight} argument and is the deep-learning analogue of the class-weight adjustments commonly used for tree-based and linear classifiers. Because no synthetic data is introduced, the training distribution preserves the original behavioural patterns of fraudulent and legitimate transactions, and any subsequent decision-threshold tuning operates on probability estimates that have not been distorted by oversampling.
+
+\subsection{SMOTE}
+\label{subsec:smote_method}
+
+As an alternative to cost-sensitive training, we also evaluate the Synthetic Minority Over-sampling Technique (SMOTE), originally proposed by \textcite{chawla_smote_2002}, which generates artificial minority-class samples via interpolation in feature space.
 
 For each minority class observation $\mathbf{x}_i \in \mathbb{R}^d$, $k$ nearest neighbors are identified within the minority class using Euclidean distance. Synthetic samples are generated by selecting a neighbor $\mathbf{x}_{\text{nn}}$ at random and computing
 \begin{equation}
@@ -410,7 +430,21 @@ For each minority class observation $\mathbf{x}_i \in \mathbb{R}^d$, $k$ nearest
 \end{equation}
 where $\lambda \sim \mathcal{U}(0,1)$. This procedure places new samples along line segments between neighboring minority observations, promoting more general decision regions.
 
-In this study, SMOTE is implemented using the \texttt{scikit-learn}-compatible implementation from the \texttt{imbalanced-learn} library, which closely follows the original formulation of \textcite{chawla_smote_2002}, with $k=5$ by default. All synthetic samples are generated using training data only to avoid information leakage. Models trained with SMOTE are evaluated on the held out test set, which preserves the original class distribution. This design allows us to compare baseline and SMOTE-based LSTM models under identical evaluation conditions while preserving the original class distribution in the held-out test data.
+In this study, SMOTE is implemented using the \texttt{scikit-learn}-compatible implementation from the \texttt{imbalanced-learn} library, which closely follows the original formulation of \textcite{chawla_smote_2002}, with $k = 5$ by default. Because the LSTM operates on per-card sliding windows rather than on individual transactions, SMOTE is applied at the sequence level: each window is flattened into a single high-dimensional feature vector, the interpolation procedure above is run in that flattened space, and the resulting synthetic vectors are reshaped back into the original sequence layout. The minority class is up-sampled to ten percent of the majority class, which is the configuration used in the experiments reported in Section~\ref{subsec:smote}; full balancing was found to exhaust available memory on the training machine and was not used. Synthetic samples are generated only from the training portion of the development sample to avoid information leakage; validation and test data preserve the original class distribution. When SMOTE is used, the positive-class weight in the loss is set to one, so that the loss reduces to standard binary cross-entropy on a now-balanced training set and the two imbalance-handling mechanisms do not compound.
+
+This design allows us to compare cost-sensitive and SMOTE-based LSTM models under identical evaluation conditions while preserving the original class distribution in the held-out test data.
+
+
+\section{Sequence Construction}
+\label{sec:sequence_construction}
+
+After feature engineering and preprocessing, transactions are arranged into per-card sequences before being passed to the model. This step is the bridge between the row-wise representation used by the classical baselines in our previous study and the sequence-aware representation required by the LSTM. The construction procedure is deterministic and operates exclusively within each split, so that no information crosses the train, validation, or test boundary.
+
+For every credit-card identifier \(\texttt{cc\_num}\), the corresponding transactions are sorted in ascending order of \texttt{trans\_date\_trans\_time}. For each transaction \(i\) of card \(c\), a fixed-length window is then constructed from the up to \(L = 20\) most recent transactions of the same card with a timestamp less than or equal to that of transaction \(i\), inclusive. The label associated with the window is the \texttt{is\_fraud} indicator of transaction \(i\); the labels of the preceding transactions in the window are not used as features. When fewer than \(L\) prior transactions are available for the same card, the window is left-padded with zero vectors and the original number of valid transactions is recorded as a length mask, so that the recurrent model can ignore padded positions during training and inference.
+
+Importantly, \(\texttt{cc\_num}\) is used only as a grouping key for sequence construction and is not included in the feature set. As discussed in Section~\ref{sec:feature_exclusion}, the card identifier is excluded from \texttt{FEATURE\_COLS} for leakage-prevention reasons, and this exclusion is preserved here. The card identity therefore never enters the model tensor; what the model sees is the same row-level feature representation as the classical baselines, with the additional structure that each prediction is conditioned on the recent transaction history of the same card. This distinction allows the sequence model to capture per-card behavioural context without re-introducing the entity-memorisation risk associated with high-cardinality identifiers.
+
+After preprocessing, each transaction is represented by 78 numerical features. Applied to the temporal split described in Section~\ref{sec:data_split}, the construction procedure yields 400{,}425 training and 70{,}664 validation sequences, of which 2{,}655 and 247 are fraudulent, respectively, and 555{,}719 test sequences with 2{,}145 fraudulent. These counts equal the row counts of the underlying splits because every transaction generates exactly one window centred on itself; the windowing step does not change the number of training instances, only the representation of each instance.
 
 
 \section{LSTM}
@@ -455,11 +489,32 @@ The forget gate determines which parts of the old memory are retained. The input
 
 In practical terms, the LSTM processes a sequence of transaction feature vectors and updates an internal representation of recent behaviour over time. This is useful in fraud detection because the model can evaluate whether the current transaction is consistent with earlier activity or constitutes a suspicious deviation. Since the transaction data are transformed into numerical feature vectors during preprocessing, the LSTM operates directly on structured transactional inputs.
 
-\subsection{Training and Hyperparameter Tuning}
+\subsection{Network Architecture}
+\label{subsec:lstm_arch}
 
-After the final time step, the last hidden representation is passed to a dense output layer with a sigmoid activation function to produce the predicted fraud probability $\hat{p}(y = 1 \mid x_{1:T})$. Because the task is binary classification, the model is trained using binary cross-entropy loss.
+The model implemented in this study consists of three components arranged in sequence. First, an input projection layer maps each 78-dimensional transaction feature vector to a 64-dimensional dense representation; this step decouples the input feature dimension from the recurrent hidden size and provides a small amount of learned linear preprocessing before the recurrent dynamics begin. Second, a stack of two LSTM layers with hidden size 128, applied in the unidirectional configuration, processes the projected sequence. The two-layer depth is sufficient to learn compositional temporal patterns over windows of length 20 without the parameter and runtime cost of a deeper stack, while still benefitting from the gating mechanisms described in Section~\ref{sec:lstm}. Third, the hidden state at the final time step is passed through a small dense classification head that applies a dropout mask, projects the 128-dimensional representation to 64 dimensions through a ReLU non-linearity, and finally maps to a single scalar logit. A sigmoid activation is applied at evaluation time to produce the fraud probability $\hat{p}(y = 1 \mid x_{1:T})$; during training, the logit is consumed directly by the loss function described below.
 
-Hyperparameter tuning focuses on the aspects of the architecture most likely to affect sequential learning and generalization, including the number of LSTM units, the number of recurrent layers, dropout, learning rate, batch size, and sequence length. Model selection is based exclusively on validation performance within the development sample, while the temporally separated test set remains untouched until the final evaluation stage. This preserves the distinction between model development and out-of-sample assessment that is central to the paper.
+\subsection{Training Procedure}
+\label{subsec:lstm_train}
+
+The model is implemented in PyTorch and optimised with AdamW using a learning rate of $10^{-3}$ and weight decay of $10^{-5}$. Gradient norms are clipped at 1.0 to stabilise training. The objective is binary cross-entropy. Three configurations of the loss are evaluated and compared in Section~\ref{subsec:smote}: plain binary cross-entropy on the imbalanced data (no positive-class weighting), cost-sensitive binary cross-entropy with the positive-class weight set to the empirical ratio of negatives to positives in the training subset (which evaluates to approximately 150) as introduced in Section~\ref{subsec:cost_sensitive_loss}, and standard binary cross-entropy on a SMOTE-rebalanced training set with the positive-class weight reset to one, as specified in Section~\ref{subsec:smote_method}. The cost-sensitive configuration is used as the default for the headline LSTM rows reported in Section~\ref{subsec:model_comparison}, in line with the standard recommendation under severe class imbalance; Section~\ref{subsec:smote} discusses how this default compares against the alternatives.
+
+Training is run for at most 30 epochs with a mini-batch size of 256 sequences. Early stopping monitors validation PR-AUC at the end of every epoch with a patience of five: the model state corresponding to the highest observed validation PR-AUC is retained, and training terminates once no improvement is observed for five consecutive epochs. This protocol selects the checkpoint with the strongest ranking quality on the minority class and provides an automatic safeguard against the mild overfitting visible in the training-loss trajectory, which is examined in Section~\ref{sec:training_results}.
+
+After training and checkpoint selection, a single decision threshold is chosen on the validation set by maximising the F$_2$ score on the validation probabilities. The choice of F$_2$ over F$_1$ reflects the operational asymmetry of fraud detection, in which a missed fraudulent transaction is more costly than a false-positive review. The selected threshold is then frozen and applied unchanged to the test set, in line with the development-versus-evaluation separation described in Section~\ref{sec:data_split}. Test-set metrics are reported both at this F$_2$-tuned threshold and at the default threshold $\tau = 0.5$, so that any contribution of threshold tuning to the headline results is transparent.
+
+\subsection{Hyperparameter Grid Search}
+\label{subsec:lstm_grid}
+
+Within the broader hyperparameter inventory of the model (number of recurrent layers, hidden size, dropout, learning rate, batch size, sequence length), two are varied empirically and the remainder are held fixed at the values described in Sections~\ref{subsec:lstm_arch} and \ref{subsec:lstm_train}. The two varied hyperparameters are the optimiser learning rate and the dropout rate applied between the recurrent layers and within the classification head: the learning rate governs the optimisation regime under the large positive-class weight, while dropout is the most direct lever on the train/validation gap that motivates regularisation in the first place. The grid search is implemented as a small full-factorial grid over
+\[
+\text{lr} \in \{3\times 10^{-4},\ 1\times 10^{-3},\ 3\times 10^{-3}\}
+\quad \text{and} \quad
+\text{dropout} \in \{0.3,\ 0.5\},
+\]
+yielding six trials. The lower dropout value coincides with the configuration used as the default in our implementation and serves as a reference point; the higher value increases regularisation. The learning-rate values are spaced geometrically around the default and bracket both more conservative and more aggressive optimisation regimes.
+
+Every trial is trained from the same initialisation seed, so that observed differences across trials reflect the varied hyperparameters rather than initialisation noise. An explicit estimate of run-to-run variance is therefore beyond the scope of this experiment. Each trial is otherwise identical to the baseline configuration: the same training, validation, and test sequences, the same loss function and optimiser, the same early-stopping protocol with patience five, and the same F$_2$-based threshold-selection step on the validation set. The final configuration carried forward to the test-set comparison is the one with the highest validation PR-AUC.
 
 
 
@@ -469,13 +524,9 @@ Hyperparameter tuning focuses on the aspects of the architecture most likely to 
 \section{Training}
 \label{sec:training_results}
 
-The LSTM model is implemented in PyTorch and trained on the development sample described in Section~\ref{sec:data_split}. After feature engineering and preprocessing, transactions are grouped by credit card number, ordered chronologically, and arranged into per-card sliding windows of length $L=20$. The card identifier itself is used only as a grouping key and is not exposed to the model as a feature, which preserves the leakage-prevention principle established in Section~\ref{sec:feature_exclusion} while still allowing the network to condition each prediction on the recent transaction history of the same card. The resulting development sample contains 400{,}425 training and 70{,}664 validation sequences, with 2{,}655 and 247 fraudulent windows respectively. After preprocessing, the input dimensionality is 78 features per time step.
+The training procedure, network architecture, loss function, and threshold-selection protocol are specified in Section~\ref{sec:lstm}. This section reports the training dynamics observed when the baseline configuration is fit on the development sample.
 
-The network consists of an input projection layer that maps each feature vector to a 64-dimensional representation, a stack of two LSTM layers with hidden size 128, and a small dense classification head with a single sigmoid output. Optimisation is performed with AdamW (learning rate $10^{-3}$, weight decay $10^{-5}$), gradient norms are clipped at $1.0$, and the loss function is binary cross-entropy with a positive-class weight estimated from the training distribution. Because the training data are highly imbalanced, this weight is approximately $150$, which is the ratio of negative to positive sequences in the training subset. This cost-sensitive formulation is the deep-learning analogue to the class-weight adjustments discussed for the classical baselines and serves as a direct alternative to oversampling.
-
-Training is run for at most 30 epochs using mini-batches of size 256, with early stopping on validation PR-AUC and a patience of five epochs. The model state corresponding to the highest validation PR-AUC is retained for downstream evaluation. After early stopping, the decision threshold is selected on the validation set by maximising the F$_2$ score, in line with the threshold-tuning strategy used in our previous study.
-
-Figure~\ref{fig:lstm_training_curves} reports the training dynamics of the baseline configuration. The validation PR-AUC rises rapidly within the first few epochs and reaches its maximum well before the maximum number of epochs is exhausted, after which validation performance plateaus while the training loss continues to decrease. This divergence between training and validation loss is consistent with mild overfitting and motivates the use of early stopping as well as the dropout-based regularisation explored in the hyperparameter sweep below.
+Figure~\ref{fig:lstm_training_curves} reports the training dynamics of the baseline configuration. The validation PR-AUC rises rapidly within the first few epochs and reaches its maximum well before the maximum number of epochs is exhausted, after which validation performance plateaus while the training loss continues to decrease. This divergence between training and validation loss is consistent with mild overfitting and motivates the use of early stopping as well as the dropout-based regularisation explored in the hyperparameter grid search below.
 
 \begin{figure}[H]
     \centering
@@ -487,21 +538,11 @@ Figure~\ref{fig:lstm_training_curves} reports the training dynamics of the basel
 \subsection{Hyperparameter Tuning}
 \label{subsec:lstm_hpt}
 
-A focused hyperparameter sweep is conducted to assess whether the baseline configuration described above can be improved without substantially increasing model capacity. Following the discussion in Section~\ref{sec:lstm}, the sweep targets the two hyperparameters most commonly associated with sequential learning and generalisation under class imbalance: the optimiser learning rate and the dropout rate applied between the recurrent layers and within the classification head. The remaining hyperparameters, including the number of LSTM layers, the hidden size, the projection dimension, the sequence length, the batch size, and the regularisation weight, are held fixed at their baseline values to isolate the effect of the swept variables.
-
-The sweep is implemented as a small full-factorial grid over the values
-\[
-\text{lr} \in \{3\times 10^{-4},\ 1\times 10^{-3},\ 3\times 10^{-3}\}
-\quad \text{and} \quad
-\text{dropout} \in \{0.3,\ 0.5\},
-\]
-yielding six trials. The lower dropout value coincides with the baseline configuration and serves as a reference point, while the higher value increases regularisation in response to the training/validation divergence visible in Figure~\ref{fig:lstm_training_curves}. The learning-rate values are chosen on a geometric grid bracketing the baseline, which permits both faster and more conservative optimisation regimes to be evaluated. The random seed is held constant across trials so that differences in performance reflect the swept variables rather than initialisation noise; an explicit estimate of run-to-run variance is therefore beyond the scope of this experiment. Each trial uses the same training, validation, and test sequences as the baseline run, and uses early stopping with patience five.
-
-For every trial, the best validation PR-AUC, the corresponding F$_2$-tuned decision threshold, and the resulting test-set performance are recorded. Table~\ref{tab:lstm_hpt} summarises the validation and test outcomes across all six configurations.
+The grid search and selection protocol are described in Section~\ref{subsec:lstm_grid}. Table~\ref{tab:lstm_hpt} summarises the validation and test outcomes across all six configurations.
 
 \begin{table}[H]
 \centering
-\caption{Hyperparameter sweep over learning rate and dropout for the baseline LSTM. Validation PR-AUC is reported on the internal validation split; test ROC-AUC, PR-AUC, fraud precision, fraud recall, and F$_1$ are reported on the held-out test set at the F$_2$-optimal threshold tuned on the validation set.}
+\caption{Hyperparameter grid search over learning rate and dropout for the baseline LSTM. Validation PR-AUC is reported on the internal validation split; test ROC-AUC, PR-AUC, fraud precision, fraud recall, and F$_1$ are reported on the held-out test set at the F$_2$-optimal threshold tuned on the validation set.}
 \label{tab:lstm_hpt}
 \small
 \renewcommand{\arraystretch}{1.2}
@@ -521,16 +562,14 @@ $3\times 10^{-3}$ & 0.5 & 0.888 & 0.987 & 0.890 & 0.76 & 0.87 & 0.81 \\
 
 The configuration with the highest validation PR-AUC is the combination $\text{lr} = 1\times 10^{-3}$ and $\text{dropout} = 0.3$, which exactly reproduces the baseline of Section~\ref{sec:training_results}. Reducing the learning rate to $3\times 10^{-4}$ degrades validation PR-AUC by approximately six percentage points, while increasing dropout to $0.5$ produces a comparatively small reduction. The lowest-learning-rate trials are clearly under-trained within the available epoch budget. Increasing the learning rate to $3\times 10^{-3}$ slightly worsens the validation score relative to the baseline but happens to yield the highest test-set PR-AUC ($0.915$), underlining the importance of selecting configurations on the validation set rather than on the test set.
 
-Within the present grid, the sweep therefore does not produce a configuration that materially improves on the baseline when configurations are selected through validation performance. The differences between the six trials are small, and the seed is held constant across runs, so the observed variation reflects the swept hyperparameters rather than an estimate of run-to-run variability. The baseline configuration is consequently retained for the final test-set comparison reported in the next section.
+Within the present grid, the grid search therefore does not produce a configuration that materially improves on the baseline when configurations are selected through validation performance. The differences between the six trials are small, and the seed is held constant across runs, so the observed variation reflects the varied hyperparameters rather than an estimate of run-to-run variability. The baseline configuration is consequently retained for the final test-set comparison reported in the next section.
 
 
 
 \section{Model Comparison on the Test Set}
 \label{subsec:model_comparison}
 
-This section reports the final out-of-sample performance of the tuned LSTM on the held-out test file \texttt{fraudTest.csv} (555{,}719 transactions, 2{,}145 fraudulent and 553{,}574 legitimate). To place the deep-learning results in context, the same table includes the Random Forest and Support Vector Machine baselines from our previous study, evaluated on the same test set under the same F$_2$-optimal threshold-tuning procedure. Both classes are well represented in the test set in absolute terms, but the prevalence of fraud remains below $0.4\%$, which makes the precision--recall trade-off the most informative summary of operational quality.
-
-Table~\ref{tab:lstm_vs_classic} compares the four model configurations of interest. The two classical baselines are reported with their F$_2$-optimal validation thresholds, while the LSTM is reported at both the default decision threshold $\tau = 0.5$ and at the F$_2$-tuned threshold selected on the validation set, mirroring the threshold-selection procedure described in Section~\ref{sec:training_results}. This dual reporting clarifies that the substantial improvement in the LSTM over the classical baselines does not depend on threshold optimisation.
+Table~\ref{tab:lstm_vs_classic} reports the final out-of-sample performance of the tuned LSTM on the held-out test file \texttt{fraudTest.csv} (555{,}719 transactions, 2{,}145 fraudulent and 553{,}574 legitimate), alongside the Random Forest and Support Vector Machine baselines from our previous study evaluated on the same test set. The classical baselines are reported at their F$_2$-optimal validation thresholds, and the LSTM is reported at both the default decision threshold $\tau = 0.5$ and at the F$_2$-tuned threshold described in Section~\ref{subsec:lstm_train}; the dual LSTM reporting clarifies that the improvement over the classical baselines does not depend on threshold optimisation.
 
 \begin{table}[H]
 \centering
@@ -558,14 +597,14 @@ The headline gain in PR-AUC, from $0.509$ to $0.899$, is unusually large and mot
 The default-threshold and tuned-threshold rows for the LSTM also illustrate that the model produces well-separated probability estimates. ROC-AUC and PR-AUC are threshold-independent and therefore identical across the two rows, but the operating-point metrics differ markedly. At the default threshold $\tau = 0.5$, recall is high ($0.91$) at the cost of precision ($0.60$), reflecting the upward shift in logits introduced by the positive-class weighting in the loss. F$_2$-based threshold tuning on the validation set raises the decision threshold to $\tau \approx 0.993$ and produces a much more balanced operating point, with precision rising to $0.88$ and recall settling at $0.85$. The fact that a near-extreme threshold value yields a balanced operating point is consistent with a strongly bimodal score distribution and with training under a large positive-class weight; it is not, by itself, a sign of overfitting. Section~\ref{sec:training_results} additionally documents that this threshold is selected exclusively on validation data, so the test-set numbers reported above are an out-of-sample estimate of operational performance rather than a calibration on the test set.
 
 
-\subsection{SMOTE}
+\subsection{Effect of Class Imbalance Handling}
 \label{subsec:smote}
 
-A second LSTM model is trained on a SMOTE-resampled version of the training sequences in order to revisit, in the deep-learning setting, the synthetic-oversampling question that motivated our previous study. SMOTE is applied at the sequence level on the windows constructed by the same per-card sliding procedure used in the baseline run, with the minority class up-sampled to ten percent of the majority class. As described in Section~\ref{sec:imbalance}, the resampling procedure operates only on the training data, while the validation and test data preserve the original class distribution. Apart from the resampling step and the corresponding removal of the positive-class weight in the loss function, all hyperparameters and training procedures match the baseline LSTM. Table~\ref{tab:lstm_smote_comparison} reports the resulting test-set performance alongside the baseline LSTM for direct comparison.
+To isolate the contribution of imbalance-handling techniques to the LSTM's performance, three variants of the same architecture are compared: a reference model trained with plain binary cross-entropy on the imbalanced data (no imbalance handling), the cost-sensitive baseline of Section~\ref{sec:training_results} that uses $\text{pos\_weight} \approx 150$, and the sequence-level SMOTE variant specified in Section~\ref{subsec:smote_method}. All three variants share the same architecture, optimiser, learning rate, dropout, training schedule, early-stopping protocol, and threshold-selection procedure. They differ only in the imbalance-handling mechanism applied during training. Table~\ref{tab:lstm_smote_comparison} reports the resulting test-set performance.
 
 \begin{table}[H]
 \centering
-\caption{Test-set comparison between the baseline LSTM trained on imbalanced data and the LSTM trained with sequence-level SMOTE. Both models are reported at the default threshold and at the F$_2$-optimal threshold tuned on the validation set.}
+\caption{Test-set comparison of the three imbalance-handling arms. The first arm uses plain binary cross-entropy on the imbalanced data; the second uses cost-sensitive binary cross-entropy with $\text{pos\_weight} \approx 150$; the third uses sequence-level SMOTE with $\text{pos\_weight} = 1$. Each arm is reported at the default threshold and at the F$_2$-optimal threshold tuned on the validation set.}
 \label{tab:lstm_smote_comparison}
 \small
 \renewcommand{\arraystretch}{1.2}
@@ -573,20 +612,25 @@ A second LSTM model is trained on a SMOTE-resampled version of the training sequ
 \hline
 \textbf{Model} & \textbf{Threshold} & \textbf{ROC-AUC} & \textbf{PR-AUC} & \textbf{Precision} & \textbf{Recall} & \textbf{F$_1$} \\
 \hline
-LSTM           & default ($0.500$)        & 0.988 & 0.899 & 0.60 & 0.91 & 0.72 \\
-LSTM           & F$_2$-tuned ($0.993$)    & 0.988 & 0.899 & 0.88 & 0.85 & 0.86 \\
+LSTM, no imbalance handling & default ($0.500$)         & 0.994 & 0.931 & 0.95 & 0.86 & 0.90 \\
+LSTM, no imbalance handling & F$_2$-tuned ($0.181$)      & 0.994 & 0.931 & 0.86 & 0.90 & 0.88 \\
 \hline
-LSTM + SMOTE   & default ($0.500$)        & 0.986 & 0.862 & 0.77 & 0.83 & 0.80 \\
-LSTM + SMOTE   & F$_2$-tuned ($0.144$)    & 0.986 & 0.862 & 0.53 & 0.89 & 0.66 \\
+LSTM, cost-sensitive        & default ($0.500$)         & 0.988 & 0.899 & 0.60 & 0.91 & 0.72 \\
+LSTM, cost-sensitive        & F$_2$-tuned ($0.993$)     & 0.988 & 0.899 & 0.88 & 0.85 & 0.86 \\
+\hline
+LSTM + SMOTE                & default ($0.500$)         & 0.986 & 0.862 & 0.77 & 0.83 & 0.80 \\
+LSTM + SMOTE                & F$_2$-tuned ($0.144$)     & 0.986 & 0.862 & 0.53 & 0.89 & 0.66 \\
 \hline
 \end{tabular}
 \end{table}
 
-The two models exhibit similar ranking quality: the LSTM trained on imbalanced data with cost-sensitive loss reaches a test PR-AUC of $0.899$, while the SMOTE-trained variant reaches $0.862$. The differences in ROC-AUC are negligible. The two models therefore differ only marginally in their ability to rank transactions, and ranking quality is approximately preserved when synthetic oversampling replaces explicit class weighting.
+The first observation is that the no-imbalance arm is the strongest of the three on essentially every metric. It achieves the highest test PR-AUC ($0.931$ vs.\ $0.899$ for cost-sensitive and $0.862$ for SMOTE) and the highest test ROC-AUC ($0.994$). Its F$_2$-optimal decision threshold lies at a moderate value of $\tau \approx 0.181$, and the corresponding fraud-class operating point ($P = 0.86$, $R = 0.90$, $F_1 = 0.88$) dominates the F$_2$-tuned operating points of both other arms. Even at the default threshold $\tau = 0.5$, the no-imbalance arm achieves $P = 0.95$, $R = 0.86$, $F_1 = 0.90$, with only $106$ false positives across the full $553{,}574$ legitimate transactions in the test set. This is the strongest fraud-class operating point reported anywhere in this study.
 
-The operating-point comparison, however, is less favourable for SMOTE. At its F$_2$-tuned threshold of approximately $0.144$, the SMOTE-trained LSTM achieves slightly higher recall ($0.89$ vs.\ $0.85$) but substantially lower precision ($0.53$ vs.\ $0.88$). The corresponding F$_1$ score drops from $0.86$ to $0.66$. In operational terms, this means that the SMOTE-trained model identifies roughly the same number of fraudulent transactions but flags considerably more legitimate transactions as suspicious, which would meaningfully increase the false-positive review burden on a human analyst. At the default threshold, the SMOTE-trained model yields a more balanced trade-off ($0.77$ precision, $0.83$ recall, F$_1$ of $0.80$), but it does not surpass the F$_2$-tuned baseline LSTM on any of these axes.
+The cost-sensitive arm, despite being the standard recommendation under severe class imbalance, performs worse than the no-imbalance arm on PR-AUC by roughly three percentage points and on F$_1$ at the tuned operating point by roughly two percentage points. The mechanism is visible in the operating-point metrics. At $\tau = 0.5$, the cost-sensitive arm catches more fraud cases ($R = 0.91$ vs.\ $0.86$) but produces an order of magnitude more false positives ($1{,}317$ vs.\ $106$), driving precision down to $0.60$ and $F_1$ to $0.72$. F$_2$-tuning then has to compensate with a near-extreme threshold of $\tau \approx 0.993$, which restores precision to $0.88$ at the cost of recall ($0.85$). The large positive-class weight in the loss therefore exchanges probability calibration for recall: the model's logits are pushed upward across the board, which makes the standard $\tau = 0.5$ threshold operationally unusable and forces threshold tuning into a region where small numerical perturbations of the logits map to large changes in the decision. The simpler no-imbalance arm avoids this and, crucially, ranks transactions slightly better.
 
-These findings echo the conclusions of our previous study, although in a less extreme form. In the classical setting, SMOTE substantially degraded both Random Forest and SVM performance on the held-out test set, with the Random Forest's fraud-class F$_1$ falling from $0.48$ to $0.13$ and the SVM collapsing into a near-trivial classifier with $0.01$ precision. With an LSTM, sequence-level SMOTE does not produce a comparable collapse, but it also does not improve over the simpler approach of training on imbalanced data with a positive-class weight in the loss. Two reasons help explain this. First, the binary cross-entropy loss with $\text{pos\_weight}\approx 150$ already delivers an effective form of cost-sensitive learning, so synthetic oversampling competes with rather than complements the existing imbalance-handling mechanism. Second, sequence-level SMOTE interpolates between flattened multivariate windows; the resulting synthetic windows may not lie on the manifold of plausible per-card transaction histories, and the model cannot use them to learn the genuine temporal structure that drives the gain reported in Section~\ref{subsec:model_comparison}. The overall lesson from both studies is therefore consistent: under realistic temporal evaluation, well-calibrated cost-sensitive training is more reliable than synthetic oversampling, and this conclusion extends from classical machine-learning models to the deep-learning setting considered here.
+The SMOTE arm shows a similar pattern in a more pronounced form. At the F$_2$-tuned threshold of $\tau \approx 0.144$, recall is slightly higher than the cost-sensitive arm ($0.89$ vs.\ $0.85$) but precision drops sharply to $0.53$, yielding $F_1 = 0.66$. PR-AUC also falls to $0.862$, the lowest of the three arms. In operational terms, the SMOTE-trained model identifies roughly the same number of fraudulent transactions as the other two arms but flags considerably more legitimate transactions as suspicious, which would meaningfully increase the false-positive review burden on a human analyst.
+
+Taken together, these findings indicate that explicit imbalance handling is not necessary to obtain strong fraud-detection performance with this LSTM, and that both standard imbalance-handling techniques degrade performance to a measurable extent in this setting. This contrasts with the classical setting reported in our previous study, in which SMOTE substantially degraded both Random Forest and SVM performance — the Random Forest's fraud-class F$_1$ fell from $0.48$ to $0.13$ and the SVM collapsed into a near-trivial classifier with $0.01$ precision — while the row-wise classifiers benefited from cost-sensitive class weights. The deep-learning setting therefore behaves differently along two dimensions. First, the per-card sequence representation introduced in Section~\ref{sec:sequence_construction} provides enough discriminative signal that the model can rank fraudulent transactions accurately even when the loss does not explicitly compensate for the class ratio of roughly $150{:}1$; in this regime, the cost-sensitive correction sacrifices probability calibration for marginal recall gains and ends up worse on F$_1$ overall. Second, sequence-level SMOTE interpolates between flattened multivariate windows, and the resulting synthetic windows may not lie on the manifold of plausible per-card transaction histories. The model cannot use these synthetic windows to learn the temporal structure that drives the gain reported in Section~\ref{subsec:model_comparison}, and ranking quality measurably suffers. The conclusion from both studies is therefore that synthetic oversampling does not help under realistic temporal evaluation, and the additional conclusion specific to the deep-learning setting is that even cost-sensitive class weighting can be omitted when the model architecture itself captures the relevant structure.
 
 
 \subsection{Statistical Significance on Fraud Recall}

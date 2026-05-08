@@ -1,0 +1,24 @@
+# LSTM ablation arm: no imbalance handling. Plain BCE on imbalanced data.
+# pos_weight is forced to 1.0 (no cost-sensitive reweighting) and SMOTE is off.
+# This is the "baseline of baselines" against which the cost-sensitive and
+# SMOTE variants are compared in the paper.
+train_csv: data/raw/fraudTrain.csv
+test_csv: data/raw/fraudTest.csv
+out_dir: models/lstm_no_imbalance
+seq_len: 20
+proj_dim: 64
+hidden_size: 128
+num_layers: 2
+dropout: 0.3
+batch_size: 256
+epochs: 30
+lr: 0.001
+weight_decay: 0.00001
+grad_clip: 1.0
+early_stop_patience: 5
+use_smote: false
+val_fraction: 0.15
+seed: 42
+device: auto
+subset_frac: 1.0
+pos_weight_override: 1.0
