@@ -104,6 +104,29 @@ All metrics on the held-out **`fraudTest.csv`** (555,719 rows, 2,145 fraud / 553
 
 Headline: **LSTM lifts PR-AUC from RF's 0.51 to 0.90** and **F1 from 0.48 to 0.86**. Same pattern as the legacy notebook: SMOTE does not help — a properly class-weighted loss (`BCEWithLogitsLoss(pos_weight≈150)`) outperforms SMOTE-on-flattened-windows.
 
+## Hyperparameter tuning
+
+A small focused sweep over the two hyperparameters most likely to affect generalisation under class imbalance — learning rate and dropout — was run on the baseline LSTM (no SMOTE). The grid is `lr ∈ {3e-4, 1e-3, 3e-3} × dropout ∈ {0.3, 0.5}`, six trials, seed fixed at 42 to isolate the hyperparameter effect (variance was not estimated). All other settings match `configs/lstm.yaml`. Each trial trains for up to 30 epochs with the existing early-stopping patience of 5.
+
+Reproduce:
+
+```bash
+python scripts/tune_lstm.py --sweep-config configs/tune_lstm.yaml
+```
+
+Per-trial artifacts land in `models/tuning/lstm_lr_dropout_v1/trial_NNN_*/` (`model.pt`, `metrics.json`, `training_log.csv`, `training_curves.png`, `confusion_matrix_default.png`, `confusion_matrix_tuned.png`). Aggregated row-per-trial CSV at `models/tuning/lstm_lr_dropout_v1/tuning_results.csv`.
+
+| lr     | dropout | val PR-AUC | test ROC-AUC | test PR-AUC | tuned thr | tuned P | tuned R | tuned F1 |
+|--------|---------|------------|--------------|-------------|-----------|---------|---------|----------|
+| 3e-4   | 0.3     | 0.830      | 0.985        | 0.860       | 0.976     | 0.77    | 0.82    | 0.80     |
+| **1e-3** | **0.3** | **0.889**  | 0.988        | 0.899       | 0.993     | **0.88** | 0.85   | **0.86** |
+| 3e-3   | 0.3     | 0.878      | 0.989        | *0.915*     | 0.970     | 0.84    | 0.87    | 0.86     |
+| 3e-4   | 0.5     | 0.828      | 0.981        | 0.858       | 0.875     | 0.79    | 0.82    | 0.81     |
+| 1e-3   | 0.5     | 0.874      | 0.983        | 0.888       | 0.923     | 0.81    | 0.86    | 0.83     |
+| 3e-3   | 0.5     | 0.888      | 0.987        | 0.890       | 0.982     | 0.76    | 0.87    | 0.81     |
+
+Bold = best by validation PR-AUC (the legitimate selection criterion). *Italic* = best by test PR-AUC, shown only to make the model-selection point honestly: if you peeked at test, `lr=3e-3, dropout=0.3` would win marginally. Selecting on the validation set returns the original baseline (`lr=1e-3, dropout=0.3`), and the sweep does **not** materially improve it within this grid. The bottom row is that the existing configuration was already a reasonable first guess; cutting the learning rate to `3e-4` clearly hurts (under-trained within the epoch budget), and increasing dropout to `0.5` is a small but consistent regression — the early-stopping mechanism alone already addresses the train/val divergence visible in `training_log.csv`.
+
 ## Where the gain comes from: `cc_num` as structure, not a feature
 
 This is the technical reason the LSTM beats the RF, and it's worth understanding.

@@ -1,0 +1,66 @@
+{
+  "config": {
+    "train_csv": "data/raw/fraudTrain.csv",
+    "test_csv": "data/raw/fraudTest.csv",
+    "out_dir": "/home/fdu/GitHub/DeepLearningFS26/models/tuning/lstm_lr_dropout_v1/trial_000_dropout0p3_lr3e-04",
+    "seq_len": 20,
+    "proj_dim": 64,
+    "hidden_size": 128,
+    "num_layers": 2,
+    "dropout": 0.3,
+    "batch_size": 256,
+    "epochs": 30,
+    "lr": 0.0003,
+    "weight_decay": 1e-05,
+    "grad_clip": 1.0,
+    "early_stop_patience": 5,
+    "use_smote": false,
+    "smote_sampling_strategy": 0.1,
+    "val_fraction": 0.15,
+    "seed": 42,
+    "device": "auto",
+    "subset_frac": 1.0
+  },
+  "n_features": 78,
+  "best_val_pr_auc": 0.8304190683123016,
+  "test_default_threshold": {
+    "threshold": 0.5,
+    "roc_auc": 0.9853758252066338,
+    "pr_auc": 0.8604139821184211,
+    "fraud_precision": 0.5213231273920175,
+    "fraud_recall": 0.889044289044289,
+    "fraud_f1": 0.6572462519386524,
+    "confusion_matrix": [
+      [
+        551823,
+        1751
+      ],
+      [
+        238,
+        1907
+      ]
+    ],
+    "support_pos": 2145,
+    "support_neg": 553574
+  },
+  "test_tuned_threshold": {
+    "threshold": 0.975846529006958,
+    "roc_auc": 0.9853758252066338,
+    "pr_auc": 0.8604139821184211,
+    "fraud_precision": 0.7709424083769634,
+    "fraud_recall": 0.8237762237762237,
+    "fraud_f1": 0.7964841108857336,
+    "confusion_matrix": [
+      [
+        553049,
+        525
+      ],
+      [
+        378,
+        1767
+      ]
+    ],
+    "support_pos": 2145,
+    "support_neg": 553574
+  }
+}

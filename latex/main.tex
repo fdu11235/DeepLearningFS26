@@ -1,0 +1,700 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Project     : LaTeX doc Vorlage für Windows ProTeXt mit TexMakerX
+% File        : PA.tex Rev. 00 (Hauptfile)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[oneside,12pt,parskip=half,american,numbers=noenddot]{scrreprt}
+
+\usepackage[utf8]{inputenc}
+\usepackage[american]{babel}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{newtxtext,newtxmath}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\usepackage[plainpages=false]{hyperref}
+
+% Bibliography
+\usepackage[style=apa, backend=biber]{biblatex}
+\addbibresource{references.bib}
+\addbibresource{manuell.bib}
+
+% Page layout (YOUR original geometry)
+\geometry{
+  a4paper,
+  top=1.5cm,
+  bottom=1.5cm,
+  left=3cm,
+  right=3cm,
+  headheight=14pt,
+  headsep=0.6cm,
+  footskip=1.25cm,
+  includeheadfoot
+}
+
+% Header/footer vertical placement (tune to taste)
+\setlength{\headsep}{7mm}     % smaller -> header closer to top edge
+\setlength{\footskip}{10mm}   % smaller -> footer closer to bottom edge
+
+% Format list of figures/tables
+\usepackage{tocloft}
+\renewcommand{\cftfigpresnum}{Figure~}
+\renewcommand{\cfttabpresnum}{Table~}
+\renewcommand{\cftfigaftersnum}{\hspace{0.5em}}
+\renewcommand{\cfttabaftersnum}{\hspace{0.5em}}
+\settowidth{\cftfignumwidth}{Figure~99.99}
+\settowidth{\cfttabnumwidth}{Table~99.99}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% === KOMA header/footer setup (scrlayer-scrpage ONLY) ===
+\usepackage[automark]{scrlayer-scrpage}
+
+% --- FRONT MATTER: no lines, page number only (must work on chapter opening pages too)
+\newpairofpagestyles{frontmatter}{
+  \clearpairofpagestyles
+  \ihead{} \ohead{}
+  \ifoot{} \ofoot{\pagemark}
+}
+
+% --- MAIN MATTER: lines + chapter title in header + page number in footer
+\newpairofpagestyles{mainmatter}{
+  \clearpairofpagestyles
+  \automark[chapter]{chapter}
+  \ihead{\leftmark}
+  \ohead{}
+  \ifoot{} \ofoot{\pagemark}
+}
+
+% Make the chapter-opening pages behave like the chosen pagestyle
+% (This is THE key for ToC/LoF/LoT page 1 and for chapter page 1.)
+\renewcommand*{\chapterpagestyle}{frontmatter} % will be switched later to mainmatter
+
+% Chapter spacing (reduce the big drop everywhere)
+\RedeclareSectionCommand[
+  font=\huge,
+  beforeskip=0pt plus 1pt minus 1pt,
+  afterskip=8pt plus 1pt minus 1pt
+]{chapter}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Begin document ---
+\begin{document}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Title page (no numbering) ---
+\begin{titlepage}
+    \thispagestyle{empty} % No page number here
+    \centering
+    \vspace*{1.8cm} % pushes everything down a bit from top
+
+    % --- University Header ---
+    {\large
+    \textbf{Zurich University of Applied Sciences} \\
+    School of Management and Law \\
+    \vspace{0.4cm}
+    Department Banking, Finance, Insurance \\
+    }
+
+    \vfill
+
+    % --- Paper Title Block ---
+    {\Large \textbf{Deep Learning FS 26}} \\[1.0cm]
+
+    {\LARGE\bfseries
+    Fraud Detection
+    }
+
+    \vfill
+
+    % --- Author and Supervisor Information ---
+    {\large
+    \textbf{Submitted by} \\[0.3cm]
+    Francis Du \\
+    Max Heinzer \\
+    Dominik Kaufmann \\[1.2cm]
+
+    \textbf{Supervised by} \\[0.3cm]
+    Bledar Fazlija \\[1.4cm]
+
+    Winterthur, May 12\textsuperscript{th}, 2026
+    }
+
+    \vspace*{1.2cm} % ensures bottom spacing adapts gracefully
+\end{titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- FRONT MATTER: Roman numbering, NO lines, page numbers visible ---
+\pagenumbering{Roman}
+\setcounter{page}{1}
+
+\pagestyle{frontmatter}
+\renewcommand*{\chapterpagestyle}{frontmatter}
+\KOMAoptions{headsepline=false, footsepline=false}
+
+\onehalfspacing
+
+% === Management Summary ===
+\chapter*{Management Summary}
+\thispagestyle{frontmatter}
+\addcontentsline{toc}{chapter}{\textbf{Management Summary}}
+
+This space is reserved for the management summary.
+
+\newpage
+
+% === Table of Contents ===
+\renewcommand{\contentsname}{\textbf{Table of Contents}}
+\addcontentsline{toc}{chapter}{\textbf{Table of Contents}}
+\tableofcontents
+\thispagestyle{frontmatter}
+\newpage
+
+% === List of Tables ===
+\renewcommand{\listtablename}{\textbf{List of Tables}}
+\addcontentsline{toc}{chapter}{\textbf{List of Tables}}
+\listoftables
+\thispagestyle{frontmatter}
+\newpage
+
+% === List of Figures ===
+\renewcommand{\listfigurename}{\textbf{List of Figures}}
+\addcontentsline{toc}{chapter}{\textbf{List of Figures}}
+\listoffigures
+\thispagestyle{frontmatter}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- MAIN MATTER: Arabic numbering, WITH lines (also on chapter page 1) ---
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\pagestyle{mainmatter}
+\renewcommand*{\chapterpagestyle}{mainmatter}
+\KOMAoptions{headsepline=true, footsepline=true}
+
+\onehalfspacing
+
+% === Main content ===
+\chapter{Introduction}\label{Introduction}
+
+\section{Background}\label{Background}
+Credit card fraud detection is a critical problem in modern financial systems, characterized by significant consequences and challenging data structures. The rarity of fraudulent transactions relative to legitimate ones introduces severe class imbalance, complicating both model training and evaluation. A model that appears highly accurate can still be practically useless if it misses most fraud cases or overwhelms analysts with false alarms. \textcite{gunjan_credit_2022} describe this imbalance as a central obstacle in credit card fraud detection, since naive classifiers can achieve deceptively strong aggregate metrics by predicting the majority class almost everywhere.
+
+As digital payments have expanded, fraud has increasingly shifted toward card-not-present transactions, where authorization relies primarily on card details and contextual signals rather than physical possession of the card \parencite{xuan_random_2018}. This raises both the economic and operational stakes of effective fraud detection. At the same time, the problem is not static: fraudsters continuously adapt their strategies, which means that models must identify rare events under changing behavioral patterns rather than under a fixed and stable data-generating process \parencite{afriyie_supervised_2023}. Because our dataset provides transaction-level fraud labels, a supervised learning framework remains a natural starting point for comparing predictive approaches and evaluating imbalance-handling techniques.
+
+In our previous work, we examined the same dataset using classical supervised machine-learning models under a comparable evaluation design. Specifically, we evaluated Random Forest and Support Vector Machine classifiers on both the original imbalanced data and a SMOTE-resampled version of the training data. Although the Random Forest achieved the strongest overall balance among the earlier models, performance remained limited, and SMOTE did not improve generalization to the temporally separated test set. In some cases, oversampling substantially increased recall only at the cost of a dramatic loss in precision, producing an operationally unrealistic number of false positives. These findings suggest that class imbalance cannot be addressed as a purely mechanical preprocessing problem. Instead, the central issue is whether a different model class can learn more informative structure from the same transactions without recreating the same false-positive burden.
+
+Recent literature suggests that deep learning is a promising next step in this context. \textcite{mienye_deep_2024} note that, although most credit card fraud studies have historically relied on traditional machine learning, deep learning applications have increased substantially in recent years. In particular, recurrent architectures such as RNNs, LSTMs, and GRUs are especially relevant for fraud detection because they are designed to model sequential data and temporal relationships in transaction streams \parencite{mienye_deep_2024}. Similarly, \textcite{zhou_deep_2025} argue that fraud detection benefits from models that can capture both short-term fluctuations and longer-term dependencies in transaction behavior. This is particularly relevant in our setting, where fraudulent activity may emerge not only through isolated feature values but also through changes in timing, frequency, and behavioral sequence.
+
+At the same time, the recent deep learning literature makes clear that class imbalance remains a major challenge even when more expressive models are used. \textcite{mienye_deep_2024} emphasize that resampling, cost-sensitive learning, and loss-function adaptation remain important strategies in deep learning-based fraud detection, while \textcite{sekhar_nama_credit_2026} likewise stress that fraud datasets remain severely imbalanced and that sampling choices can materially influence downstream performance. This is directly relevant for the present paper, since one of the main lessons from our earlier machine learning study was that SMOTE did not help in our original setting and, in some cases, substantially worsened generalization.
+
+Building on these results, the present paper shifts from classical machine-learning models to a deep learning approach based on Long Short-Term Memory (LSTM) networks. Using the same dataset and a comparable evaluation logic, we examine whether a sequence model can better capture temporal and behavioural dependencies in transaction data and thereby improve fraud detection on unseen observations. At the same time, we revisit SMOTE in this new modelling context. Since oversampling performed poorly in our earlier study, a key question is whether synthetic balancing becomes more useful when combined with a model that is explicitly designed to process sequential information, or whether the same generalization problem persists.
+
+\section{Research Question}\label{Research Question}
+This study examines whether a deep learning approach can improve credit card fraud detection under severe class imbalance. Using the same dataset and a comparable evaluation design as in our previous machine-learning study, we evaluate an LSTM model trained on the original imbalanced data and on training data balanced using SMOTE.
+
+The primary research question is:
+
+\textit{Can an LSTM-based model improve fraud detection on this dataset relative to our earlier classical benchmarks, and does applying SMOTE to the training data improve or worsen out-of-sample performance compared with training on the original imbalanced data?}
+
+Because fraud detection is an operational classification problem, the answer is assessed primarily through fraud recall, fraud precision, and the broader precision--recall trade-off on the temporally separated test set.
+
+\pagebreak
+\chapter{Methods}
+
+Figure~\ref{fig:ml_pipeline} provides an overview of the modelling pipeline adopted in this study. The workflow is designed to maintain a strict separation between model development and final evaluation, thereby reducing information leakage and overly optimistic performance estimates. Following exploratory data analysis, feature engineering, sequence construction, and preprocessing, the development dataset (\texttt{fraudTrain.csv}) is split into training and validation subsets. Model fitting, hyperparameter tuning, and interim evaluation are conducted exclusively within this development sample.
+
+In contrast to our previous study, which focused on Random Forest and Support Vector Machine classifiers, the present paper evaluates an LSTM-based deep learning model under two training conditions: the original imbalanced data and a SMOTE-resampled training set. The held-out file \texttt{fraudTest.csv}, which is temporally separated from the development data, is reserved exclusively for final out-of-sample evaluation.
+
+This design allows us to assess not only whether an LSTM improves fraud detection relative to our earlier benchmarks, but also whether SMOTE contributes to or harms generalization in the deep-learning setting.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/graphs/ml_pipeline.pdf}
+    \caption{ML Pipeline}
+    \label{fig:ml_pipeline}
+\end{figure}
+
+\section{Dataset Description}
+\label{sec:eda}
+
+The analysis is conducted on a publicly available credit card transaction dataset obtained from Kaggle \parencite{kaggle_fraud_detection_dataset}. The dataset is provided as two separate files, \texttt{fraudTrain.csv} and \texttt{fraudTest.csv}, which are temporally disjoint and share an identical feature schema.  Together, the two files correspond to an approximate 70/30 split between development and test data.
+
+The file \texttt{fraudTrain.csv} contains 1,296,675 observations and is used as the development dataset. This dataset is further split into training and validation subsets using an 80/20 stratified split, as described in Section~\ref{sec:data_split}, and is used for model fitting, preprocessing, and hyperparameter tuning. The file \texttt{fraudTest.csv} contains 555,719 observations and serves as a held-out test set. It is not used during model development and is reserved exclusively for final out-of-sample evaluation.
+
+\subsubsection{Training Set}
+The training dataset contains approximately 1.3 million individual credit card transactions recorded between early 2019 and mid-2020. Each observation corresponds to a single transaction and is associated with a binary target variable, \texttt{is\_fraud}, indicating whether the transaction was fraudulent. The dataset exhibits a pronounced class imbalance, with fraudulent transactions accounting for a small fraction of all observations.
+
+The data contain a heterogeneous set of transactional, temporal, geographical, and customer-level variables. Transaction attributes include the amount (\texttt{amt}), merchant identifier (\texttt{merchant}), merchant category (\texttt{category}), and transaction timestamps (\texttt{trans\_date\_trans\_time}, \texttt{unix\_time}). Additional variables describe customer demographics and location, including gender, city, state, ZIP code, city population, occupation, and date of birth. Geographic coordinates are available for both the cardholder and the merchant, enabling the construction of spatially informed features. At the same time, the dataset also includes several identifier-like fields, such as credit card numbers, transaction identifiers, names, and street-level addresses, which require careful handling to avoid memorization and leakage. Legitimate transactions account for approximately 99\% of all observations, while fraudulent transactions represent only a very small minority, underscoring the extreme imbalance characteristic of real-world fraud detection tasks.
+
+
+\subsubsection{Test Set}
+The held-out test dataset contains approximately 550,000 transactions recorded from mid-2020 to early 2021. It follows the same feature structure as the training data, including the same set of transactional, categorical, temporal, and geographical variables. The distribution of key attributes, such as merchant categories, transaction amounts, and demographic characteristics, is broadly consistent with the training set, while reflecting natural temporal variation. The test set is used exclusively for final model evaluation and is not involved in feature engineering, encoding, or model training.
+
+\subsubsection{Feature Overview.}
+An overview of the variables available in both datasets is provided below:
+
+\begin{table}[H]
+\centering
+\caption{Overview of features in the credit card fraud dataset.}
+\label{tab:dataset_features}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{ll}
+\hline
+\textbf{Feature} & \textbf{Description} \\
+\hline
+\texttt{index} & Unique identifier for each transaction \\
+\texttt{trans\_date\_trans\_time} & Transaction date and time \\
+\texttt{cc\_num} & Credit card number of the customer \\
+\texttt{merchant} & Merchant name \\
+\texttt{category} & Merchant category \\
+\texttt{amt} & Transaction amount \\
+\texttt{first}, \texttt{last} & Cardholder first and last name \\
+\texttt{gender} & Cardholder gender \\
+\texttt{street}, \texttt{city}, \texttt{state}, \texttt{zip} & Cardholder address information \\
+\texttt{lat}, \texttt{long} & Cardholder geographic coordinates \\
+\texttt{city\_pop} & Population of the cardholder’s city \\
+\texttt{job} & Cardholder occupation \\
+\texttt{dob} & Cardholder date of birth \\
+\texttt{trans\_num} & Unique transaction identifier \\
+\texttt{unix\_time} & Unix timestamp of the transaction \\
+\texttt{merch\_lat}, \texttt{merch\_long} & Merchant geographic coordinates \\
+\texttt{is\_fraud} & Fraud indicator (target variable) \\
+\hline
+\end{tabular}
+\end{table}
+
+The presence of high-cardinality identifiers and sensitive personal attributes motivates careful feature selection and leakage prevention strategies, which are discussed in subsequent sections.
+
+
+\section{Exploratory Data Analysis}
+\label{sec:eda}
+
+This section describes the exploratory analysis conducted to understand the structure of the data, class imbalance, and key characteristics of transactional, temporal, and categorical variables.
+
+\subsection{Class Imbalance}
+The dataset exhibits extreme class imbalance, with fraudulent transactions representing well below one percent of all observations. This imbalance makes accuracy-based evaluation misleading and motivates the use of precision--recall metrics, stratified sampling, and explicit imbalance-handling strategies throughout model development. Figure~\ref{fig:eda_class_imbalance} illustrates the extreme rarity of fraudulent transactions, which complicates reliable fraud detection and performance assessment.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/graphs/fig_eda_class_imbalance.png}
+    \caption{Distribution of fraudulent and non-fraudulent transactions}
+    \label{fig:eda_class_imbalance}
+\end{figure}
+
+
+\subsection{Temporal Patterns}
+
+Fraud occurrence exhibits clear temporal patterns, as shown in Figure~\ref{fig:eda_fraud_by_hour}. Fraud rates vary across hours of the day, with elevated rates during late-night and early-morning periods, while daytime hours show substantially lower incidence. Fraud prevalence also differs across weekdays, indicating that transaction risk is not temporally uniform. These patterns motivate the construction of temporal features and support the broader use of a sequence-based model. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/graphs/fig_eda_fraud_by_hour.png}
+    \caption{Hourly fraud rate}
+    \label{fig:eda_fraud_by_hour}
+\end{figure}
+
+\subsection{Transaction Amount}
+
+As shown in figure~\ref{fig:eda_amount_by_class}, transaction amounts are highly right-skewed and span several orders of magnitude. Fraudulent transactions tend to involve higher amounts and greater dispersion than legitimate ones, although substantial overlap between classes remains, indicating that transaction amount alone is insufficient for reliable fraud detection.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/graphs/fig_eda_amount_by_class.png}
+    \caption{Distribution of transaction amounts by class on a logarithmic scale}
+    \label{fig:eda_amount_by_class}
+\end{figure}
+
+
+\subsection{Feature Correlations}
+
+Correlation analysis among numerical and engineered temporal features reveals only limited linear association with the fraud label. This suggests that fraud patterns are unlikely to be captured adequately by simple linear relationships alone and supports the use of more flexible nonlinear models.
+
+\subsection{High-Cardinality Features}
+
+Several categorical variables, including merchant, city, job, and ZIP code, exhibit high cardinality and long-tailed frequency distributions. As shown in Figure~\ref{fig:eda_fraud_by_category}, fraud rates vary substantially across merchant categories, indicating heterogeneous category-level risk. These properties motivate the use of encoding strategies specifically designed for high-cardinality categorical features.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/graphs/fig_eda_fraud_by_category_topN.png}
+    \caption{Fraud rates across top merchant categories}
+    \label{fig:eda_fraud_by_category}
+\end{figure}
+
+\section{Feature Engineering}
+\label{sec:feature_engineering}
+This section describes the feature construction choices used to represent transactions in a form suitable for modelling. The goal is not to maximize the number of variables, but to retain information that may improve fraud detection while excluding fields that mainly encourage memorization or leakage.
+
+\subsection{Temporal Feature Construction}
+Transaction timestamps are transformed into interpretable temporal features. From the raw transaction datetime, we derive the hour of day, day of week, and month, together with a binary weekend indicator. These variables are intended to capture regular temporal patterns in transaction behaviour that may be relevant for fraud detection.
+
+Because hour, weekday, and month are cyclical rather than linear quantities, they are encoded using sine and cosine transformations. This preserves the periodic structure of time by ensuring, for example, that 23:00 and 00:00 are treated as neighbouring values rather than as opposite ends of a numeric scale. For a cyclical variable \( t \) with period \( T \), the transformation is given by
+\[
+\sin\left( \frac{2\pi t}{T} \right), \quad
+\cos\left( \frac{2\pi t}{T} \right).
+\]
+
+In addition, customer age is derived from date of birth by computing the difference between the transaction date and the recorded birth date in years. After these transformations, the original timestamp and date-of-birth fields are removed in order to reduce redundancy and avoid passing raw date information directly to the model.
+
+
+\subsection{Categorical Feature Encoding}
+Categorical variables are encoded according to their cardinality. Low-cardinality variables are represented using one-hot encoding, which preserves category membership without imposing an arbitrary numerical ordering. High-cardinality variables, such as merchant, city, job, and ZIP code, are encoded using target encoding estimated exclusively on the training data. This choice reduces dimensionality relative to one-hot encoding while still retaining category-level risk information. To prevent leakage, the target-encoding mappings are learned only on the training split and then applied unchanged to validation and test observations.
+
+\subsection{Feature Exclusion and Leakage Prevention}
+\label{sec:feature_exclusion}
+
+Several identifier-like variables, including credit card numbers, transaction identifiers, names, street-level addresses, and raw timestamps, are excluded from the feature set. Although these variables may appear highly predictive within the observed sample, they primarily allow the model to memorize specific entities or historical incidents rather than learn transferable behavioural patterns.
+
+This phenomenon is a well-documented form of target leakage and entity memorization in supervised learning. \textcite{kaufman_leakage_2012} demonstrate that high-cardinality identifiers often exhibit strong apparent predictive power due to data collection artifacts and sampling bias, leading to overly optimistic performance estimates. In the context of fraud detection, \textcite{dal_pozzolo_credit_2015} emphasize that repeated entity occurrences can bias evaluation and hinder generalization under temporal and behavioral drift.
+
+Accordingly, identifier-based variables are removed in order to reduce leakage risk and to ensure that the model is evaluated on its ability to detect fraud-related behaviour rather than recall specific entities from the historical sample.
+
+\section{Data Splitting Strategy}
+\label{sec:data_split}
+
+To ensure a robust evaluation, we follow a three way splitting strategy that mirrors the workflow implemented in our Python pipeline. The dataset is provided in two separate files, \texttt{fraudTrain.csv} and \texttt{fraudTest.csv}, which are temporally disjoint. We interpret \texttt{fraudTrain.csv} as the historical development sample used for model building and hyperparameter tuning, while \texttt{fraudTest.csv} is treated as a final held out evaluation sample that is never used during model selection.
+
+\subsection{Development Sample: Training and Validation Split}
+
+All preprocessing and model selection steps are performed exclusively on \texttt{fraudTrain.csv}. From this development dataset, we create an internal validation set via a stratified random split:
+\[
+\begin{aligned}
+(X_{\text{train}}, y_{\text{train}}),\ (X_{\text{val}}, y_{\text{val}})
+&\leftarrow \texttt{train\_test\_split}(X, y, \texttt{test\_size}=0.2, \\
+&\qquad\texttt{stratify}=y,\ \texttt{random\_state}=42).
+\end{aligned}
+\]
+Stratification preserves the severe class imbalance in both subsets, ensuring that the fraud prevalence in the validation sample remains representative of the development data. The training subset (\(80\%\)) is used to fit model parameters, including all preprocessing transformations, while the validation subset (\(20\%\)) is used for hyperparameter selection and model comparison. This results in an 80/20 split between training and validation data within the original Kaggle training set.
+
+\subsection{External Test Sample}
+
+The file \texttt{fraudTest.csv} is used as an external test set \((X_{\text{test}}, y_{\text{test}})\). This split is defined by the dataset provider and is temporally separated from the training data, which supports a realistic out of sample assessment under potential temporal variation. Importantly, \texttt{fraudTest.csv} is not used for hyperparameter tuning, feature selection, calibration decisions, or any other model development step. It is only used once at the end to report final model performance.
+
+\subsection{Preprocessing within the Split and Leakage Prevention}
+
+All feature engineering steps, including the construction of cyclical time features (sine and cosine transformations) and the derivation of age from date of birth, are applied consistently to the training, validation, and test sets. However, to avoid information leakage, model fitting related transformations are learned only on the training portion of the development sample. Concretely, the preprocessing pipeline includes:
+\begin{itemize}
+    \item Standardization of numerical features using \texttt{StandardScaler},
+    \item One hot encoding for low cardinality categorical variables using \texttt{OneHotEncoder},
+    \item Target encoding for high cardinality categorical variables using \texttt{TargetEncoder}.
+\end{itemize}
+These transformations are implemented within a single pipeline object, such that \texttt{fit} is applied only on \((X_{\text{train}}, y_{\text{train}})\) and the resulting transformations are subsequently transformed and applied to \(X_{\text{val}}\) and \(X_{\text{test}}\). This ensures that scaling parameters, one hot encoding categories, and target encoding mappings are estimated solely from the training subset and do not incorporate information from validation or test observations.
+
+\subsection{Model Selection versus Final Evaluation}
+
+The internal validation set is used for model selection. In particular, for the Support Vector Machine model we tune the regularization parameter \(C\) on the validation data, while for the Random Forest model we explore key structural hyperparameters such as tree depth, minimum leaf size, and the number of features considered at each split. In both cases, the selected configuration maximizes the chosen validation metric. For both models, hyperparameter selection is based on probability-based validation metrics, with particular emphasis on precision–recall performance due to extreme class imbalance. After selecting the best configuration, we report two sets of results:
+\begin{itemize}
+    \item \textbf{Internal validation performance} on \((X_{\text{val}}, y_{\text{val}})\), which reflects model selection quality within the development sample,
+    \item \textbf{External test performance} on \((X_{\text{test}}, y_{\text{test}})\), which reflects final generalization to unseen and temporally separated data.
+\end{itemize}
+This separation between development and final evaluation is critical in fraud detection settings, where class imbalance and potential temporal drift can otherwise lead to overly optimistic performance estimates if the test set is used repeatedly during tuning.
+
+\section{Handling Class Imbalance}
+\label{sec:imbalance}
+
+Class imbalance poses a significant challenge for supervised learning algorithms, as standard classifiers tend to be biased toward the majority class. To address this issue, we apply the Synthetic Minority Over-sampling Technique (SMOTE), originally proposed by \textcite{chawla_smote_2002}, which generates artificial minority class samples via interpolation in feature space.
+
+For each minority class observation $\mathbf{x}_i \in \mathbb{R}^d$, $k$ nearest neighbors are identified within the minority class using Euclidean distance. Synthetic samples are generated by selecting a neighbor $\mathbf{x}_{\text{nn}}$ at random and computing
+\begin{equation}
+\mathbf{x}_{\text{synthetic}} = \mathbf{x}_i + \lambda \left( \mathbf{x}_{\text{nn}} - \mathbf{x}_i \right),
+\end{equation}
+where $\lambda \sim \mathcal{U}(0,1)$. This procedure places new samples along line segments between neighboring minority observations, promoting more general decision regions.
+
+In this study, SMOTE is implemented using the \texttt{scikit-learn}-compatible implementation from the \texttt{imbalanced-learn} library, which closely follows the original formulation of \textcite{chawla_smote_2002}, with $k=5$ by default. All synthetic samples are generated using training data only to avoid information leakage. Models trained with SMOTE are evaluated on the held out test set, which preserves the original class distribution. This design allows us to compare baseline and SMOTE-based LSTM models under identical evaluation conditions while preserving the original class distribution in the held-out test data.
+
+
+\section{LSTM}
+\label{sec:lstm}
+
+\subsection{Model Choice and Motivation}
+Long Short-Term Memory (LSTM) networks are a class of recurrent neural networks designed for sequential data. In credit card fraud detection, this is relevant because suspicious activity may arise not only from the characteristics of a single transaction, but also from its position within a sequence of prior transactions. An LSTM is therefore a natural candidate when the goal is to model short-run and longer-run behavioural patterns in transaction streams.
+
+A standard recurrent neural network passes a hidden state from one time step to the next, but it often struggles when useful information lies far back in the sequence. As the sequence becomes longer, the signal from earlier steps can fade, which makes learning difficult. This problem is commonly described as the vanishing gradient problem. \textcite{olah_understanding_2015} explain that this is one of the main reasons why standard RNNs have difficulty learning long term dependencies.
+
+For this reason, the present study uses an LSTM model. LSTMs were introduced to preserve useful information over longer parts of a sequence by adding a separate memory path called the cell state and by using gates that control what information is kept, added, and passed forward. This makes the model well suited to the present setting, where fraud may be linked to temporal patterns and changes in behaviour across a sequence of transactions rather than to a single feature value alone.
+
+\subsection{Model Specification}
+
+Let $x_1, x_2, \dots, x_T$ denote a sequence of transaction feature vectors. At each time step $t$, the LSTM receives the current input $x_t$, the previous hidden state $h_{t-1}$, and the previous cell state $C_{t-1}$. The model then computes
+
+\[
+f_t = \sigma \left( W_f [h_{t-1}, x_t] + b_f \right), \quad \text{(forget gate)}
+\]
+
+\[
+i_t = \sigma \left( W_i [h_{t-1}, x_t] + b_i \right), \quad \text{(input gate)}
+\]
+
+\[
+\tilde{C}_t = \tanh \left( W_C [h_{t-1}, x_t] + b_C \right), \quad \text{(candidate cell state)}
+\]
+
+\[
+C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t, \quad \text{(cell state update)}
+\]
+
+\[
+o_t = \sigma \left( W_o [h_{t-1}, x_t] + b_o \right), \quad \text{(output gate)}
+\]
+
+\[
+h_t = o_t \odot \tanh(C_t), \quad \text{(hidden state)}
+\]
+
+The forget gate determines which parts of the old memory are retained. The input gate determines which new information enters the memory. The output gate determines which parts of the updated memory are exposed to the hidden state. In contrast to a standard RNN, where the hidden state is fully overwritten at each step, the cell state is updated through a gated additive rule. Old information is retained or discarded by the forget gate, and new information is added through the input gate. This gives the model a more stable way to carry information through time and helps it learn longer range dependencies \parencite{olah_understanding_2015}.
+
+In practical terms, the LSTM processes a sequence of transaction feature vectors and updates an internal representation of recent behaviour over time. This is useful in fraud detection because the model can evaluate whether the current transaction is consistent with earlier activity or constitutes a suspicious deviation. Since the transaction data are transformed into numerical feature vectors during preprocessing, the LSTM operates directly on structured transactional inputs.
+
+\subsection{Training and Hyperparameter Tuning}
+
+After the final time step, the last hidden representation is passed to a dense output layer with a sigmoid activation function to produce the predicted fraud probability $\hat{p}(y = 1 \mid x_{1:T})$. Because the task is binary classification, the model is trained using binary cross-entropy loss.
+
+Hyperparameter tuning focuses on the aspects of the architecture most likely to affect sequential learning and generalization, including the number of LSTM units, the number of recurrent layers, dropout, learning rate, batch size, and sequence length. Model selection is based exclusively on validation performance within the development sample, while the temporally separated test set remains untouched until the final evaluation stage. This preserves the distinction between model development and out-of-sample assessment that is central to the paper.
+
+
+
+
+\pagebreak
+\chapter{Results}
+\section{Training}
+\label{sec:training_results}
+
+The LSTM model is implemented in PyTorch and trained on the development sample described in Section~\ref{sec:data_split}. After feature engineering and preprocessing, transactions are grouped by credit card number, ordered chronologically, and arranged into per-card sliding windows of length $L=20$. The card identifier itself is used only as a grouping key and is not exposed to the model as a feature, which preserves the leakage-prevention principle established in Section~\ref{sec:feature_exclusion} while still allowing the network to condition each prediction on the recent transaction history of the same card. The resulting development sample contains 400{,}425 training and 70{,}664 validation sequences, with 2{,}655 and 247 fraudulent windows respectively. After preprocessing, the input dimensionality is 78 features per time step.
+
+The network consists of an input projection layer that maps each feature vector to a 64-dimensional representation, a stack of two LSTM layers with hidden size 128, and a small dense classification head with a single sigmoid output. Optimisation is performed with AdamW (learning rate $10^{-3}$, weight decay $10^{-5}$), gradient norms are clipped at $1.0$, and the loss function is binary cross-entropy with a positive-class weight estimated from the training distribution. Because the training data are highly imbalanced, this weight is approximately $150$, which is the ratio of negative to positive sequences in the training subset. This cost-sensitive formulation is the deep-learning analogue to the class-weight adjustments discussed for the classical baselines and serves as a direct alternative to oversampling.
+
+Training is run for at most 30 epochs using mini-batches of size 256, with early stopping on validation PR-AUC and a patience of five epochs. The model state corresponding to the highest validation PR-AUC is retained for downstream evaluation. After early stopping, the decision threshold is selected on the validation set by maximising the F$_2$ score, in line with the threshold-tuning strategy used in our previous study.
+
+Figure~\ref{fig:lstm_training_curves} reports the training dynamics of the baseline configuration. The validation PR-AUC rises rapidly within the first few epochs and reaches its maximum well before the maximum number of epochs is exhausted, after which validation performance plateaus while the training loss continues to decrease. This divergence between training and validation loss is consistent with mild overfitting and motivates the use of early stopping as well as the dropout-based regularisation explored in the hyperparameter sweep below.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/graphs/lstm_training_curves.png}
+    \caption{Training dynamics of the baseline LSTM. Loss (left) and PR-AUC (right) are reported for the training and validation sets across epochs. The dashed vertical line marks the epoch with the highest validation PR-AUC, which is the checkpoint retained for evaluation.}
+    \label{fig:lstm_training_curves}
+\end{figure}
+
+\subsection{Hyperparameter Tuning}
+\label{subsec:lstm_hpt}
+
+A focused hyperparameter sweep is conducted to assess whether the baseline configuration described above can be improved without substantially increasing model capacity. Following the discussion in Section~\ref{sec:lstm}, the sweep targets the two hyperparameters most commonly associated with sequential learning and generalisation under class imbalance: the optimiser learning rate and the dropout rate applied between the recurrent layers and within the classification head. The remaining hyperparameters, including the number of LSTM layers, the hidden size, the projection dimension, the sequence length, the batch size, and the regularisation weight, are held fixed at their baseline values to isolate the effect of the swept variables.
+
+The sweep is implemented as a small full-factorial grid over the values
+\[
+\text{lr} \in \{3\times 10^{-4},\ 1\times 10^{-3},\ 3\times 10^{-3}\}
+\quad \text{and} \quad
+\text{dropout} \in \{0.3,\ 0.5\},
+\]
+yielding six trials. The lower dropout value coincides with the baseline configuration and serves as a reference point, while the higher value increases regularisation in response to the training/validation divergence visible in Figure~\ref{fig:lstm_training_curves}. The learning-rate values are chosen on a geometric grid bracketing the baseline, which permits both faster and more conservative optimisation regimes to be evaluated. The random seed is held constant across trials so that differences in performance reflect the swept variables rather than initialisation noise; an explicit estimate of run-to-run variance is therefore beyond the scope of this experiment. Each trial uses the same training, validation, and test sequences as the baseline run, and uses early stopping with patience five.
+
+For every trial, the best validation PR-AUC, the corresponding F$_2$-tuned decision threshold, and the resulting test-set performance are recorded. Table~\ref{tab:lstm_hpt} summarises the validation and test outcomes across all six configurations.
+
+\begin{table}[H]
+\centering
+\caption{Hyperparameter sweep over learning rate and dropout for the baseline LSTM. Validation PR-AUC is reported on the internal validation split; test ROC-AUC, PR-AUC, fraud precision, fraud recall, and F$_1$ are reported on the held-out test set at the F$_2$-optimal threshold tuned on the validation set.}
+\label{tab:lstm_hpt}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lccccccc}
+\hline
+\textbf{lr} & \textbf{dropout} & \textbf{Val PR-AUC} & \textbf{Test ROC-AUC} & \textbf{Test PR-AUC} & \textbf{Precision} & \textbf{Recall} & \textbf{F$_1$} \\
+\hline
+$3\times 10^{-4}$ & 0.3 & 0.830 & 0.985 & 0.860 & 0.77 & 0.82 & 0.80 \\
+$1\times 10^{-3}$ & 0.3 & \textbf{0.889} & 0.988 & 0.899 & 0.88 & 0.85 & \textbf{0.86} \\
+$3\times 10^{-3}$ & 0.3 & 0.878 & 0.989 & \textit{0.915} & 0.84 & 0.87 & 0.86 \\
+$3\times 10^{-4}$ & 0.5 & 0.828 & 0.981 & 0.858 & 0.79 & 0.82 & 0.81 \\
+$1\times 10^{-3}$ & 0.5 & 0.874 & 0.983 & 0.888 & 0.81 & 0.86 & 0.83 \\
+$3\times 10^{-3}$ & 0.5 & 0.888 & 0.987 & 0.890 & 0.76 & 0.87 & 0.81 \\
+\hline
+\end{tabular}
+\end{table}
+
+The configuration with the highest validation PR-AUC is the combination $\text{lr} = 1\times 10^{-3}$ and $\text{dropout} = 0.3$, which exactly reproduces the baseline of Section~\ref{sec:training_results}. Reducing the learning rate to $3\times 10^{-4}$ degrades validation PR-AUC by approximately six percentage points, while increasing dropout to $0.5$ produces a comparatively small reduction. The lowest-learning-rate trials are clearly under-trained within the available epoch budget. Increasing the learning rate to $3\times 10^{-3}$ slightly worsens the validation score relative to the baseline but happens to yield the highest test-set PR-AUC ($0.915$), underlining the importance of selecting configurations on the validation set rather than on the test set.
+
+Within the present grid, the sweep therefore does not produce a configuration that materially improves on the baseline when configurations are selected through validation performance. The differences between the six trials are small, and the seed is held constant across runs, so the observed variation reflects the swept hyperparameters rather than an estimate of run-to-run variability. The baseline configuration is consequently retained for the final test-set comparison reported in the next section.
+
+
+
+\section{Model Comparison on the Test Set}
+\label{subsec:model_comparison}
+
+This section reports the final out-of-sample performance of the tuned LSTM on the held-out test file \texttt{fraudTest.csv} (555{,}719 transactions, 2{,}145 fraudulent and 553{,}574 legitimate). To place the deep-learning results in context, the same table includes the Random Forest and Support Vector Machine baselines from our previous study, evaluated on the same test set under the same F$_2$-optimal threshold-tuning procedure. Both classes are well represented in the test set in absolute terms, but the prevalence of fraud remains below $0.4\%$, which makes the precision--recall trade-off the most informative summary of operational quality.
+
+Table~\ref{tab:lstm_vs_classic} compares the four model configurations of interest. The two classical baselines are reported with their F$_2$-optimal validation thresholds, while the LSTM is reported at both the default decision threshold $\tau = 0.5$ and at the F$_2$-tuned threshold selected on the validation set, mirroring the threshold-selection procedure described in Section~\ref{sec:training_results}. This dual reporting clarifies that the substantial improvement in the LSTM over the classical baselines does not depend on threshold optimisation.
+
+\begin{table}[H]
+\centering
+\caption{Test-set comparison between the tuned LSTM and the classical baselines from our previous study. Classical baselines are evaluated at their F$_2$-optimal validation thresholds; the LSTM is evaluated both at the default threshold and at its F$_2$-tuned operating point.}
+\label{tab:lstm_vs_classic}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{llcccccc}
+\hline
+\textbf{Model} & \textbf{Threshold} & \textbf{ROC-AUC} & \textbf{PR-AUC} & \textbf{Precision} & \textbf{Recall} & \textbf{F$_1$} \\
+\hline
+SVM           & F$_2$-tuned ($0.025$)    & 0.903 & 0.101 & 0.18 & 0.38 & 0.24 \\
+Random Forest & F$_2$-tuned ($0.201$)    & 0.982 & 0.509 & 0.59 & 0.41 & 0.48 \\
+\hline
+LSTM          & default ($0.500$)        & 0.988 & 0.899 & 0.60 & 0.91 & 0.72 \\
+LSTM          & F$_2$-tuned ($0.993$)    & \textbf{0.988} & \textbf{0.899} & \textbf{0.88} & \textbf{0.85} & \textbf{0.86} \\
+\hline
+\end{tabular}
+\end{table}
+
+The LSTM achieves substantially stronger fraud-class performance than either classical baseline. The most informative comparison is with the Random Forest, which was the strongest model in our previous study. At the F$_2$-tuned operating point, the LSTM lifts test PR-AUC from $0.509$ to $0.899$ and the fraud-class F$_1$ score from $0.48$ to $0.86$, while simultaneously raising precision from $0.59$ to $0.88$ and recall from $0.41$ to $0.85$. This is unusual in the sense that the precision--recall trade-off does not have to be paid: the LSTM dominates the Random Forest on both axes simultaneously rather than buying recall at the cost of precision, as the SMOTE-trained classical models did in our previous study. The improvement over the SVM is even larger and is consistent with the limited capacity of a linear decision boundary in this high-dimensional, highly imbalanced setting.
+
+The headline gain in PR-AUC, from $0.509$ to $0.899$, is unusually large and motivates a direct interpretation of the structural difference between the model classes. The Random Forest in our previous study scored each transaction in isolation and could not condition on the recent history of the same card, because the card number itself was excluded from the feature set as a high-cardinality identifier. The LSTM does not reintroduce the card number as a feature either, but it uses the card number as a grouping key when constructing per-card sliding windows. As a result, each prediction is conditioned on the same card's preceding transactions in time order, while the model never observes the card identity itself. This is a structural rather than a statistical advantage: the LSTM can flag a transaction as anomalous \emph{relative to the recent behaviour of the same card}, which the row-wise classical baseline is architecturally unable to do. The same property explains why the LSTM achieves both higher recall and higher precision: the additional context permits the model to suppress false positives that the row-wise baseline cannot distinguish from genuine fraud.
+
+The default-threshold and tuned-threshold rows for the LSTM also illustrate that the model produces well-separated probability estimates. ROC-AUC and PR-AUC are threshold-independent and therefore identical across the two rows, but the operating-point metrics differ markedly. At the default threshold $\tau = 0.5$, recall is high ($0.91$) at the cost of precision ($0.60$), reflecting the upward shift in logits introduced by the positive-class weighting in the loss. F$_2$-based threshold tuning on the validation set raises the decision threshold to $\tau \approx 0.993$ and produces a much more balanced operating point, with precision rising to $0.88$ and recall settling at $0.85$. The fact that a near-extreme threshold value yields a balanced operating point is consistent with a strongly bimodal score distribution and with training under a large positive-class weight; it is not, by itself, a sign of overfitting. Section~\ref{sec:training_results} additionally documents that this threshold is selected exclusively on validation data, so the test-set numbers reported above are an out-of-sample estimate of operational performance rather than a calibration on the test set.
+
+
+\subsection{SMOTE}
+\label{subsec:smote}
+
+A second LSTM model is trained on a SMOTE-resampled version of the training sequences in order to revisit, in the deep-learning setting, the synthetic-oversampling question that motivated our previous study. SMOTE is applied at the sequence level on the windows constructed by the same per-card sliding procedure used in the baseline run, with the minority class up-sampled to ten percent of the majority class. As described in Section~\ref{sec:imbalance}, the resampling procedure operates only on the training data, while the validation and test data preserve the original class distribution. Apart from the resampling step and the corresponding removal of the positive-class weight in the loss function, all hyperparameters and training procedures match the baseline LSTM. Table~\ref{tab:lstm_smote_comparison} reports the resulting test-set performance alongside the baseline LSTM for direct comparison.
+
+\begin{table}[H]
+\centering
+\caption{Test-set comparison between the baseline LSTM trained on imbalanced data and the LSTM trained with sequence-level SMOTE. Both models are reported at the default threshold and at the F$_2$-optimal threshold tuned on the validation set.}
+\label{tab:lstm_smote_comparison}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{llcccccc}
+\hline
+\textbf{Model} & \textbf{Threshold} & \textbf{ROC-AUC} & \textbf{PR-AUC} & \textbf{Precision} & \textbf{Recall} & \textbf{F$_1$} \\
+\hline
+LSTM           & default ($0.500$)        & 0.988 & 0.899 & 0.60 & 0.91 & 0.72 \\
+LSTM           & F$_2$-tuned ($0.993$)    & 0.988 & 0.899 & 0.88 & 0.85 & 0.86 \\
+\hline
+LSTM + SMOTE   & default ($0.500$)        & 0.986 & 0.862 & 0.77 & 0.83 & 0.80 \\
+LSTM + SMOTE   & F$_2$-tuned ($0.144$)    & 0.986 & 0.862 & 0.53 & 0.89 & 0.66 \\
+\hline
+\end{tabular}
+\end{table}
+
+The two models exhibit similar ranking quality: the LSTM trained on imbalanced data with cost-sensitive loss reaches a test PR-AUC of $0.899$, while the SMOTE-trained variant reaches $0.862$. The differences in ROC-AUC are negligible. The two models therefore differ only marginally in their ability to rank transactions, and ranking quality is approximately preserved when synthetic oversampling replaces explicit class weighting.
+
+The operating-point comparison, however, is less favourable for SMOTE. At its F$_2$-tuned threshold of approximately $0.144$, the SMOTE-trained LSTM achieves slightly higher recall ($0.89$ vs.\ $0.85$) but substantially lower precision ($0.53$ vs.\ $0.88$). The corresponding F$_1$ score drops from $0.86$ to $0.66$. In operational terms, this means that the SMOTE-trained model identifies roughly the same number of fraudulent transactions but flags considerably more legitimate transactions as suspicious, which would meaningfully increase the false-positive review burden on a human analyst. At the default threshold, the SMOTE-trained model yields a more balanced trade-off ($0.77$ precision, $0.83$ recall, F$_1$ of $0.80$), but it does not surpass the F$_2$-tuned baseline LSTM on any of these axes.
+
+These findings echo the conclusions of our previous study, although in a less extreme form. In the classical setting, SMOTE substantially degraded both Random Forest and SVM performance on the held-out test set, with the Random Forest's fraud-class F$_1$ falling from $0.48$ to $0.13$ and the SVM collapsing into a near-trivial classifier with $0.01$ precision. With an LSTM, sequence-level SMOTE does not produce a comparable collapse, but it also does not improve over the simpler approach of training on imbalanced data with a positive-class weight in the loss. Two reasons help explain this. First, the binary cross-entropy loss with $\text{pos\_weight}\approx 150$ already delivers an effective form of cost-sensitive learning, so synthetic oversampling competes with rather than complements the existing imbalance-handling mechanism. Second, sequence-level SMOTE interpolates between flattened multivariate windows; the resulting synthetic windows may not lie on the manifold of plausible per-card transaction histories, and the model cannot use them to learn the genuine temporal structure that drives the gain reported in Section~\ref{subsec:model_comparison}. The overall lesson from both studies is therefore consistent: under realistic temporal evaluation, well-calibrated cost-sensitive training is more reliable than synthetic oversampling, and this conclusion extends from classical machine-learning models to the deep-learning setting considered here.
+
+
+\subsection{Statistical Significance on Fraud Recall}
+\label{statistical_significance}
+
+
+\pagebreak
+\chapter{Discussion \& Conclusion}
+
+\section{Discussion}
+
+
+
+\subsection{Interpretation of Results and Comparison with Prior Work}
+
+
+
+\subsection{Limitations}
+
+
+
+\section{Conclusion}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ab hier werden die Verzeichnisse eingehängt
+\cleardoublepage
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\printbibliography
+\addcontentsline{toc}{chapter}{\bibname} % Nutzt automatisch "References" aus babel
+
+
+\chapter*{List of Tools}
+\addcontentsline{toc}{chapter}{List of Tools}
+\begin{description}
+  \item[OpenAI (2025/2026).] ChatGPT (Version 5.2). \url{https://chat.openai.com/chat} \\
+  – Support with programming \\
+  – Generation of text suggestions
+
+  \item[Anthropic (2025/2026).] Claude AI (Claude 3.Opus). \url{https://www.anthropic.com/claude} \\
+  – Support with programming and code structuring
+
+  \item[DeepL (2025/2026).] DeepL Translator (DeepL Pro). \url{https://www.deepl.com/translator} \\
+  – Translation of individual text passages
+\end{description}
+
+
+%\lstlistoflistings
+%\addcontentsline{toc}{section}{\lstlistlistingname} % Falls "List of Listings" korrekt ist
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ab hier der Anhang eingehängt
+\appendix
+\chapter{Appendix}
+
+
+
+\section{Code \& Data}
+A ZIP file is provided containing the complete codebase together with the corresponding CSV data files.
+
+% Statement of Authorship (chapter-level, bold, unnumbered)
+\chapter{Statement of Authorship}
+\addcontentsline{toc}{chapter}{{Statement of Authorship}}
+\vspace{1cm}
+"We hereby declare that this research project is our own work, that it has been created by us without the help of others, using only the sources referenced, and that we will not supply any copies of this paper to any third parties without written permission by the supervisor of this project"
+
+At the same time, all rights to this project are hereby assigned to ZHAW Zurich University of Applied Sciences, except for the right to be identified as its author.
+
+\vspace*{1cm}
+
+% Place and date
+\noindent
+\textbf{Place, Date:} \\[1em]
+Winterthur, 22.01.2026
+
+\vspace{1cm}
+
+% Signatures heading
+\noindent
+\textbf{Signatures:}
+
+\vspace{1cm}
+
+% Signature blocks
+\noindent
+\begin{minipage}[t]{0.30\textwidth}
+\centering
+\includegraphics[width=0.8\linewidth]{images/Signatures/Signature Francis.png} \\[0.1em]
+\dotfill \\[0.1em]
+Francis Du
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.30\textwidth}
+\centering
+\includegraphics[width=0.8\linewidth]{images/Signatures/Signature Dominik.png} \\[0.1em]
+\dotfill \\[0.1em]
+Dominik Kaufmann
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.30\textwidth}
+\centering
+\includegraphics[width=0.8\linewidth]{images/Signatures/Signature Max.png} \\[0.1em]
+\dotfill \\[0.1em]
+Max Heinzer
+\end{minipage}
+
+
+
+\end{document}
