@@ -16,19 +16,28 @@ import numpy as np
 import pandas as pd
 
 
-def plot_training_curves(log_csv_path: str | Path, out_png_path: str | Path, title: str | None = None) -> None:
+def plot_training_curves(
+    log_csv_path: str | Path,
+    out_png_path: str | Path,
+    title: str | None = None,
+    color: str = "#1f77b4",
+    val_color: str = "#d62728",
+) -> None:
     """Render a 1x2 figure: (train_loss vs val_loss) and (train_pr_auc vs val_pr_auc).
 
     The vertical dashed line marks the epoch with the best validation PR-AUC,
     which is the checkpoint train_lstm() actually saves.
+
+    Train uses `color` (default blue, the Plain-BCE variant), val uses `val_color`
+    (default red), matching the palette in scripts/generate_plots.py.
     """
     df = pd.read_csv(log_csv_path)
     best_epoch = int(df.loc[df["val_pr_auc"].idxmax(), "epoch"])
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 
-    axes[0].plot(df["epoch"], df["train_loss"], label="train", marker="o", markersize=3)
-    axes[0].plot(df["epoch"], df["val_loss"], label="val", marker="o", markersize=3)
+    axes[0].plot(df["epoch"], df["train_loss"], label="train", color=color, linestyle="-", marker="o", markersize=3)
+    axes[0].plot(df["epoch"], df["val_loss"], label="val", color=val_color, linestyle="-", marker="o", markersize=3)
     axes[0].axvline(best_epoch, linestyle="--", color="gray", alpha=0.7, label=f"best epoch ({best_epoch})")
     axes[0].set_xlabel("epoch")
     axes[0].set_ylabel("BCE loss")
@@ -36,8 +45,8 @@ def plot_training_curves(log_csv_path: str | Path, out_png_path: str | Path, tit
     axes[0].legend()
     axes[0].grid(alpha=0.3)
 
-    axes[1].plot(df["epoch"], df["train_pr_auc"], label="train", marker="o", markersize=3)
-    axes[1].plot(df["epoch"], df["val_pr_auc"], label="val", marker="o", markersize=3)
+    axes[1].plot(df["epoch"], df["train_pr_auc"], label="train", color=color, linestyle="-", marker="o", markersize=3)
+    axes[1].plot(df["epoch"], df["val_pr_auc"], label="val", color=val_color, linestyle="-", marker="o", markersize=3)
     axes[1].axvline(best_epoch, linestyle="--", color="gray", alpha=0.7)
     axes[1].set_xlabel("epoch")
     axes[1].set_ylabel("PR-AUC")

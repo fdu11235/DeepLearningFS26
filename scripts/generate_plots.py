@@ -185,7 +185,7 @@ def plot_hyperparam_heatmap():
     # the grid that was actually run on it. The earlier `lstm_lr_dropout_v1`
     # sweep (cost-sensitive base) lives at models/tuning/ but is no longer the
     # one whose picked config drives the comparison in Section 5.
-    df = pd.read_csv(MODELS / "tuning" / "lstm_no_imbalance_lr_dropout_v1" / "tuning_results.csv")
+    df = pd.read_csv(MODELS / "tuning" / "lstm_no_imbalance_lr_dropout_v4" / "tuning_results.csv")
     pivot = df.pivot(index="dropout", columns="lr", values="best_val_pr_auc")
 
     fig, ax = plt.subplots(figsize=(6.5, 4))

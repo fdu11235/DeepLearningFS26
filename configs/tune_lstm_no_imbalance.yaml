@@ -5,7 +5,7 @@
 # the paper's chosen hyperparameters were originally optimised for a
 # different loss configuration.
 base_config: configs/lstm_no_imbalance.yaml
-sweep_name: lstm_no_imbalance_lr_dropout_v1
+sweep_name: lstm_no_imbalance_lr_dropout_v4
 out_root: models/tuning
 seed: 42
 grid:

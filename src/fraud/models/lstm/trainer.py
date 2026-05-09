@@ -35,7 +35,7 @@ from fraud.utils import save_json, set_seed
 
 from .dataset import SequenceDataset, collate_fn
 from .model import FraudLSTM
-from .sequences import build_sequences
+from .sequences import build_sequences, last_n_per_card
 from .smote import sequence_smote
 
 logger = logging.getLogger(__name__)
@@ -156,9 +156,47 @@ def train_lstm(cfg: TrainConfig) -> dict[str, Any]:
     logger.info("Feature dim: %d", n_features)
 
     # ---- Build sequences (per-card sliding windows) ----
+    # Val and test windows that fall in the first L-1 transactions of a
+    # card would otherwise be zero-padded for the part that lives in an
+    # earlier split. We pull the last L-1 transactions per card from
+    # train (for val) and from train+val (for test) and feed them as
+    # non-anchor history rows so the windowing logic can see them.
     train_seq = build_sequences(X_train, y_train, c_train, t_train, seq_len=cfg.seq_len)
-    val_seq = build_sequences(X_val, y_val, c_val, t_val, seq_len=cfg.seq_len)
-    test_seq = build_sequences(X_test, y_test, c_test, t_test, seq_len=cfg.seq_len)
+
+    hist_n = cfg.seq_len - 1
+    X_th, y_th, c_th, t_th = last_n_per_card(X_train, y_train, c_train, t_train, hist_n)
+    X_val_aug = np.concatenate([X_th, X_val], axis=0)
+    y_val_aug = np.concatenate([y_th, y_val], axis=0)
+    c_val_aug = np.concatenate([c_th, c_val], axis=0)
+    t_val_aug = np.concatenate([t_th, t_val], axis=0)
+    val_anchor = np.concatenate([
+        np.zeros(len(X_th), dtype=bool),
+        np.ones(len(X_val), dtype=bool),
+    ])
+    val_seq = build_sequences(
+        X_val_aug, y_val_aug, c_val_aug, t_val_aug,
+        seq_len=cfg.seq_len, anchor_mask=val_anchor,
+    )
+
+    X_tvh, y_tvh, c_tvh, t_tvh = last_n_per_card(
+        np.concatenate([X_train, X_val], axis=0),
+        np.concatenate([y_train, y_val], axis=0),
+        np.concatenate([c_train, c_val], axis=0),
+        np.concatenate([t_train, t_val], axis=0),
+        hist_n,
+    )
+    X_test_aug = np.concatenate([X_tvh, X_test], axis=0)
+    y_test_aug = np.concatenate([y_tvh, y_test], axis=0)
+    c_test_aug = np.concatenate([c_tvh, c_test], axis=0)
+    t_test_aug = np.concatenate([t_tvh, t_test], axis=0)
+    test_anchor = np.concatenate([
+        np.zeros(len(X_tvh), dtype=bool),
+        np.ones(len(X_test), dtype=bool),
+    ])
+    test_seq = build_sequences(
+        X_test_aug, y_test_aug, c_test_aug, t_test_aug,
+        seq_len=cfg.seq_len, anchor_mask=test_anchor,
+    )
     logger.info(
         "Sequences -> train: %d  val: %d  test: %d  (positives: %d / %d / %d)",
         len(train_seq.y), len(val_seq.y), len(test_seq.y),

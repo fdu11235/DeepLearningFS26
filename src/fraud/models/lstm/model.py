@@ -38,11 +38,17 @@ class FraudLSTM(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
-        # x: (B, L, F_in). Sequences are LEFT-padded so the last valid timestep
-        # is always at position L-1, regardless of length. We can therefore index
-        # the last position safely.
+        # x: (B, L, F_in), right-padded. lengths: (B,) int, valid timesteps.
+        # pack_padded_sequence skips padded positions so the LSTM cell state
+        # is only updated by real transactions.
         proj = self.input_proj(x)
-        out, _ = self.lstm(proj)
-        last = out[:, -1, :]
-        logits = self.head(last).squeeze(-1)
-        return logits
+        packed = nn.utils.rnn.pack_padded_sequence(
+            proj, lengths.cpu(), batch_first=True, enforce_sorted=False
+        )
+        out_packed, _ = self.lstm(packed)
+        out, _ = nn.utils.rnn.pad_packed_sequence(
+            out_packed, batch_first=True, total_length=x.size(1)
+        )
+        idx = (lengths - 1).clamp(min=0).view(-1, 1, 1).expand(-1, 1, out.size(-1))
+        last = out.gather(1, idx).squeeze(1)
+        return self.head(last).squeeze(-1)
