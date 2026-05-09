@@ -7,12 +7,11 @@
     "proj_dim": 64,
     "hidden_size": 128,
     "num_layers": 2,
-    "dropout": 0.3,
+    "dropout": 0.5,
     "batch_size": 256,
     "epochs": 30,
-    "lr": 0.001,
+    "lr": 0.0003,
     "weight_decay": 1e-05,
-    "grad_clip": 1.0,
     "early_stop_patience": 5,
     "use_smote": false,
     "smote_sampling_strategy": 0.1,
@@ -23,42 +22,42 @@
     "pos_weight_override": 1.0
   },
   "n_features": 78,
-  "best_val_pr_auc": 0.9096321615548947,
+  "best_val_pr_auc": 0.9857313433095466,
   "test_default_threshold": {
     "threshold": 0.5,
-    "roc_auc": 0.9937061147463008,
-    "pr_auc": 0.930560585412436,
-    "fraud_precision": 0.9459459459459459,
-    "fraud_recall": 0.8648018648018648,
-    "fraud_f1": 0.9035557720409158,
+    "roc_auc": 0.9976442653979893,
+    "pr_auc": 0.9679828697355749,
+    "fraud_precision": 0.9711442786069652,
+    "fraud_recall": 0.91002331002331,
+    "fraud_f1": 0.9395908543922984,
     "confusion_matrix": [
       [
-        553468,
-        106
+        553516,
+        58
       ],
       [
-        290,
-        1855
+        193,
+        1952
       ]
     ],
     "support_pos": 2145,
     "support_neg": 553574
   },
   "test_tuned_threshold": {
-    "threshold": 0.1812935471534729,
-    "roc_auc": 0.9937061147463008,
-    "pr_auc": 0.930560585412436,
-    "fraud_precision": 0.8584189370254578,
-    "fraud_recall": 0.896037296037296,
-    "fraud_f1": 0.8768248175182481,
+    "threshold": 0.15926647186279297,
+    "roc_auc": 0.9976442653979893,
+    "pr_auc": 0.9679828697355749,
+    "fraud_precision": 0.9348030018761726,
+    "fraud_recall": 0.9291375291375291,
+    "fraud_f1": 0.9319616553659107,
     "confusion_matrix": [
       [
-        553257,
-        317
+        553435,
+        139
       ],
       [
-        223,
-        1922
+        152,
+        1993
       ]
     ],
     "support_pos": 2145,

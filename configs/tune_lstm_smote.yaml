@@ -1,0 +1,9 @@
+# Same lr × dropout grid as tune_lstm.yaml, but on the SMOTE arm so the
+# pos_weight and SMOTE arms get the same hyperparameter search budget.
+base_config: configs/lstm_smote.yaml
+sweep_name: lstm_smote_lr_dropout_v1
+out_root: models/tuning
+seed: 42
+grid:
+  lr: [0.0003, 0.001, 0.003]
+  dropout: [0.3, 0.5]

@@ -1,0 +1,65 @@
+{
+  "config": {
+    "train_csv": "data/raw/fraudTrain.csv",
+    "test_csv": "data/raw/fraudTest.csv",
+    "out_dir": "models/lstm",
+    "seq_len": 20,
+    "proj_dim": 64,
+    "hidden_size": 128,
+    "num_layers": 2,
+    "dropout": 0.3,
+    "batch_size": 256,
+    "epochs": 30,
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 1.0,
+    "early_stop_patience": 5,
+    "use_smote": false,
+    "val_fraction": 0.15,
+    "seed": 42,
+    "device": "auto",
+    "subset_frac": 1.0
+  },
+  "n_features": 78,
+  "best_val_pr_auc": 0.8889432746363416,
+  "test_default_threshold": {
+    "threshold": 0.5,
+    "roc_auc": 0.9882648782727183,
+    "pr_auc": 0.8985395653566405,
+    "fraud_precision": 0.5960122699386503,
+    "fraud_recall": 0.9058275058275058,
+    "fraud_f1": 0.718963922294172,
+    "confusion_matrix": [
+      [
+        552257,
+        1317
+      ],
+      [
+        202,
+        1943
+      ]
+    ],
+    "support_pos": 2145,
+    "support_neg": 553574
+  },
+  "test_tuned_threshold": {
+    "threshold": 0.9931222796440125,
+    "roc_auc": 0.9882648782727183,
+    "pr_auc": 0.8985395653566405,
+    "fraud_precision": 0.8792434529582929,
+    "fraud_recall": 0.8452214452214453,
+    "fraud_f1": 0.8618968386023295,
+    "confusion_matrix": [
+      [
+        553325,
+        249
+      ],
+      [
+        332,
+        1813
+      ]
+    ],
+    "support_pos": 2145,
+    "support_neg": 553574
+  }
+}

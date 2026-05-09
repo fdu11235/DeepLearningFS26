@@ -19,7 +19,13 @@ from sklearn.metrics import average_precision_score
 from torch.utils.data import DataLoader
 
 from fraud.data import feature_engineering, load_raw_csv, temporal_split
-from fraud.evaluation import compute_metrics, format_report, tune_threshold_f2
+from fraud.evaluation import (
+    compute_metrics,
+    format_report,
+    plot_confusion_matrix,
+    plot_training_curves,
+    tune_threshold_f2,
+)
 from fraud.preprocessing import (
     FEATURE_COLS,
     build_preprocessor,
@@ -49,7 +55,6 @@ class TrainConfig:
     epochs: int = 30
     lr: float = 1e-3
     weight_decay: float = 1e-5
-    grad_clip: float = 1.0
     early_stop_patience: int = 5
     use_smote: bool = False
     smote_sampling_strategy: float | str = 0.1
@@ -98,7 +103,6 @@ def _epoch(model, loader, criterion, optimizer, device, train: bool):
             if train:
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
             total_loss += loss.item() * y.size(0)
             total += y.size(0)
@@ -108,6 +112,20 @@ def _epoch(model, loader, criterion, optimizer, device, train: bool):
     p_arr = np.concatenate(all_p)
     pr_auc = average_precision_score(y_arr, p_arr) if y_arr.sum() > 0 else float("nan")
     return total_loss / max(total, 1), pr_auc, y_arr, p_arr
+
+
+def _predict(model, loader, device) -> tuple[np.ndarray, np.ndarray]:
+    model.eval()
+    all_y = []
+    all_p = []
+    with torch.no_grad():
+        for x, lengths, y in loader:
+            x = x.to(device, non_blocking=True)
+            lengths = lengths.to(device, non_blocking=True)
+            logits = model(x, lengths)
+            all_y.append(y.numpy())
+            all_p.append(torch.sigmoid(logits).cpu().numpy())
+    return np.concatenate(all_y), np.concatenate(all_p)
 
 
 def train_lstm(cfg: TrainConfig) -> dict[str, Any]:
@@ -226,12 +244,12 @@ def train_lstm(cfg: TrainConfig) -> dict[str, Any]:
         model.load_state_dict(best_state)
 
     # ---- Threshold tuning on val ----
-    _, _, y_val_arr, p_val_arr = _epoch(model, val_loader, criterion, optimizer, device, train=False)
+    y_val_arr, p_val_arr = _predict(model, val_loader, device)
     best_thr, best_f2 = tune_threshold_f2(y_val_arr, p_val_arr)
     logger.info("Tuned threshold: %.4f  (F2=%.4f)", best_thr, best_f2)
 
     # ---- Test evaluation ----
-    _, _, y_test_arr, p_test_arr = _epoch(model, test_loader, criterion, optimizer, device, train=False)
+    y_test_arr, p_test_arr = _predict(model, test_loader, device)
     test_metrics_default = compute_metrics(y_test_arr, p_test_arr, threshold=0.5)
     test_metrics_tuned = compute_metrics(y_test_arr, p_test_arr, threshold=best_thr)
     logger.info("\n%s", format_report(test_metrics_default, name="LSTM (thr=0.5)"))
@@ -258,6 +276,29 @@ def train_lstm(cfg: TrainConfig) -> dict[str, Any]:
         y_proba=p_test_arr,
         threshold=np.asarray([best_thr], dtype=np.float64),
     )
+
+    run_tag = out_dir.name
+    try:
+        plot_training_curves(log_path, out_dir / "training_curves.png", title=run_tag)
+    except Exception as e:
+        logger.warning("plot_training_curves failed: %s", e)
+    try:
+        plot_confusion_matrix(
+            test_metrics_default["confusion_matrix"],
+            out_dir / "confusion_matrix_default.png",
+            title=f"{run_tag} — test @ thr=0.5",
+        )
+    except Exception as e:
+        logger.warning("plot_confusion_matrix (default) failed: %s", e)
+    try:
+        plot_confusion_matrix(
+            test_metrics_tuned["confusion_matrix"],
+            out_dir / "confusion_matrix_tuned.png",
+            title=f"{run_tag} — test @ thr={best_thr:.4f}",
+        )
+    except Exception as e:
+        logger.warning("plot_confusion_matrix (tuned) failed: %s", e)
+
     return {
         "best_val_pr_auc": float(best_val_pr),
         "test_default_threshold": test_metrics_default,

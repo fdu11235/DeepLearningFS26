@@ -12,52 +12,52 @@
     "epochs": 30,
     "lr": 0.001,
     "weight_decay": 1e-05,
-    "grad_clip": 1.0,
     "early_stop_patience": 5,
     "use_smote": false,
     "smote_sampling_strategy": 0.1,
     "val_fraction": 0.15,
     "seed": 42,
     "device": "auto",
-    "subset_frac": 1.0
+    "subset_frac": 1.0,
+    "pos_weight_override": null
   },
   "n_features": 78,
-  "best_val_pr_auc": 0.8743324607890441,
+  "best_val_pr_auc": 0.9738177970375305,
   "test_default_threshold": {
     "threshold": 0.5,
-    "roc_auc": 0.9830108280564769,
-    "pr_auc": 0.8878519060473403,
-    "fraud_precision": 0.6816546762589928,
-    "fraud_recall": 0.8834498834498834,
-    "fraud_f1": 0.7695431472081218,
+    "roc_auc": 0.9966292384263604,
+    "pr_auc": 0.9490611405729127,
+    "fraud_precision": 0.47223497016980265,
+    "fraud_recall": 0.9594405594405594,
+    "fraud_f1": 0.6329386437029063,
     "confusion_matrix": [
       [
-        552689,
-        885
+        551274,
+        2300
       ],
       [
-        250,
-        1895
+        87,
+        2058
       ]
     ],
     "support_pos": 2145,
     "support_neg": 553574
   },
   "test_tuned_threshold": {
-    "threshold": 0.9231191277503967,
-    "roc_auc": 0.9830108280564769,
-    "pr_auc": 0.8878519060473403,
-    "fraud_precision": 0.8102992957746479,
-    "fraud_recall": 0.8582750582750582,
-    "fraud_f1": 0.8335974643423137,
+    "threshold": 0.9818520545959473,
+    "roc_auc": 0.9966292384263604,
+    "pr_auc": 0.9490611405729127,
+    "fraud_precision": 0.8902439024390244,
+    "fraud_recall": 0.9188811188811189,
+    "fraud_f1": 0.9043358568479009,
     "confusion_matrix": [
       [
-        553143,
-        431
+        553331,
+        243
       ],
       [
-        304,
-        1841
+        174,
+        1971
       ]
     ],
     "support_pos": 2145,

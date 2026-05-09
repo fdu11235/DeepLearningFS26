@@ -161,11 +161,22 @@ venv.bak/
 # Leading slashes anchor these to the repo root so we don't accidentally
 # ignore src/fraud/models/ (the Python package).
 /data/raw/*.csv
+/data/raw/old/
 !/data/raw/.gitkeep
 /data/processed/
 !/data/processed/.gitkeep
-# Trained model artifacts under /models/ ARE tracked (small, ~11 MB total,
-# enables reproducing the comparison table without re-running training).
+
+# Trained model artifacts under /models/.
+# We keep small, paper-useful files (metrics.json, threshold.json, *.png,
+# tuning_results.csv) and ignore the large or easily-regenerable ones
+# (.pt weights, .pkl preprocessors, .npz prediction tensors, per-epoch
+# training_log.csv, run.log). Pushing the large ones repeatedly bloats
+# the repo and tripped GitHub's 100 MB file-size limit.
+/models/**/*.pt
+/models/**/*.pkl
+/models/**/*.npz
+/models/**/training_log.csv
+/models/**/run.log
 
 # editable-install metadata
 src/*.egg-info/

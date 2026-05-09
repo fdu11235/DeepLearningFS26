@@ -13,7 +13,6 @@ batch_size: 256
 epochs: 1
 lr: 0.001
 weight_decay: 0.00001
-grad_clip: 1.0
 early_stop_patience: 5
 use_smote: false
 val_fraction: 0.15

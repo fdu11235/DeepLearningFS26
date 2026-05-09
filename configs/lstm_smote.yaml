@@ -7,12 +7,11 @@ seq_len: 20
 proj_dim: 64
 hidden_size: 128
 num_layers: 2
-dropout: 0.3
+dropout: 0.5
 batch_size: 256
 epochs: 30
-lr: 0.001
+lr: 0.0003
 weight_decay: 0.00001
-grad_clip: 1.0
 early_stop_patience: 5
 use_smote: true
 # Generate enough synthetic positives to make the minority class equal 10% of
@@ -23,4 +22,11 @@ smote_sampling_strategy: 0.1
 val_fraction: 0.15
 seed: 42
 device: auto
-subset_frac: 1.0
+# subset_frac=0.5 is a memory cap specific to the SMOTE arm. On the full
+# 1.3M-row training file, the imblearn-based sequence_smote step peaks at
+# ~14 GB (originals + synthetic in one array), which OOMs the 16 GB WSL
+# host. At 0.5 the SMOTE arm trains on ~550k sequences — comparable to
+# the volume the old (471k-row) run handled, so peak stays under ~7 GB.
+# The cost-sensitive and no-imbalance arms do not have this doubling and
+# train on the full set.
+subset_frac: 0.5
