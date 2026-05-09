@@ -2,7 +2,7 @@
   "config": {
     "train_csv": "data/raw/fraudTrain.csv",
     "test_csv": "data/raw/fraudTest.csv",
-    "out_dir": "/home/fdu/GitHub/DeepLearningFS26/models/tuning/lstm_no_imbalance_lr_dropout_v1/trial_000_dropout0p3_lr3e-04",
+    "out_dir": "/home/fdu/GitHub/DeepLearningFS26/models/tuning/lstm_no_imbalance_lr_dropout_v1/trial_001_dropout0p3_lr0p001",
     "seq_len": 20,
     "proj_dim": 64,
     "hidden_size": 128,
@@ -10,7 +10,7 @@
     "dropout": 0.3,
     "batch_size": 256,
     "epochs": 30,
-    "lr": 0.0003,
+    "lr": 0.001,
     "weight_decay": 1e-05,
     "early_stop_patience": 5,
     "use_smote": false,
@@ -22,42 +22,42 @@
     "pos_weight_override": 1.0
   },
   "n_features": 78,
-  "best_val_pr_auc": 0.9866985906939023,
+  "best_val_pr_auc": 0.9857491035226204,
   "test_default_threshold": {
     "threshold": 0.5,
-    "roc_auc": 0.9980744047940123,
-    "pr_auc": 0.9684208843467872,
-    "fraud_precision": 0.9796437659033079,
-    "fraud_recall": 0.8974358974358975,
-    "fraud_f1": 0.9367396593673966,
+    "roc_auc": 0.9986450863148468,
+    "pr_auc": 0.9672756439494952,
+    "fraud_precision": 0.9725411882176734,
+    "fraud_recall": 0.9081585081585082,
+    "fraud_f1": 0.9392478302796529,
     "confusion_matrix": [
       [
-        553534,
-        40
+        553519,
+        55
       ],
       [
-        220,
-        1925
+        197,
+        1948
       ]
     ],
     "support_pos": 2145,
     "support_neg": 553574
   },
   "test_tuned_threshold": {
-    "threshold": 0.03417668119072914,
-    "roc_auc": 0.9980744047940123,
-    "pr_auc": 0.9684208843467872,
-    "fraud_precision": 0.8930928288605368,
-    "fraud_recall": 0.9463869463869464,
-    "fraud_f1": 0.9189678587596197,
+    "threshold": 0.2273329645395279,
+    "roc_auc": 0.9986450863148468,
+    "pr_auc": 0.9672756439494952,
+    "fraud_precision": 0.9403195488721805,
+    "fraud_recall": 0.9328671328671329,
+    "fraud_f1": 0.9365785162649193,
     "confusion_matrix": [
       [
-        553331,
-        243
+        553447,
+        127
       ],
       [
-        115,
-        2030
+        144,
+        2001
       ]
     ],
     "support_pos": 2145,
