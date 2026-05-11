@@ -240,3 +240,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Class-delivery exclusions
+# Keep models/.gitkeep so the directory survives in checkouts (training scripts
+# write under it). Everything else under models/ is regenerable from the configs.
+/models/*
+!/models/.gitkeep
+
+# LaTeX sources, snapshots, and reference PDFs ship separately from the repo.
+/latex/
+
+# Run logs from training and tuning sweeps.
+/logs/
+
+# Archived classical-ML notebook (prior project, no longer needed).
+/notebooks/legacy/
+
