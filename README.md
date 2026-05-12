@@ -79,7 +79,7 @@ Artifacts go to `models/<config-name>/`: `model.pt`, `preprocessor.pkl`, `thresh
 python scripts/evaluate.py
 ```
 
-Prints a side-by-side metrics table for the LSTM runs and runs McNemar tests against the classic baselines if `data/processed/legacy_predictions.parquet` exists. To produce that parquet, open `notebooks/02_lstm_results.ipynb` (or the legacy notebook) and run its export cell.
+Prints a side-by-side metrics table for the LSTM runs against the classic baselines if `data/processed/legacy_predictions.parquet` exists. To produce that parquet, open `notebooks/02_lstm_results.ipynb` (or the legacy notebook) and run its export cell.
 
 ## Tests
 

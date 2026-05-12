@@ -253,6 +253,4 @@ __marimo__/
 # Run logs from training and tuning sweeps.
 /logs/
 
-# Archived classical-ML notebook (prior project, no longer needed).
-/notebooks/legacy/
 
