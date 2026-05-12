@@ -1,4 +1,4 @@
-"""Feature engineering ported from the legacy notebook.
+"""Feature engineering for the fraud dataset.
 
 Adds: cyclical sin/cos for hour/weekday/month, is_weekend, age (years).
 Drops: PII, raw temporal/location columns no longer needed.
@@ -12,10 +12,10 @@ import numpy as np
 import pandas as pd
 
 
-# Reference date for age computation. The legacy notebook used pd.Timestamp("now"),
-# which is non-deterministic across runs. We pin a fixed date here so age values
-# are reproducible. This affects only the absolute scale of `age`; relative ordering
-# and downstream model performance are unchanged.
+# Reference date for age computation, pinned for reproducibility. Using
+# pd.Timestamp("now") would make `age` non-deterministic across runs. The
+# absolute scale of `age` differs from a "now"-based version; relative
+# ordering and downstream model performance are unchanged.
 AGE_REFERENCE_DATE = pd.Timestamp("2024-01-01")
 
 # Columns to drop before modeling. cc_num/trans_date_trans_time are kept
@@ -38,8 +38,8 @@ PII_AND_REDUNDANT = [
 
 
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply the legacy notebook's feature engineering, keeping `cc_num` and
-    `trans_date_trans_time` so the LSTM can build temporal sequences."""
+    """Apply feature engineering, keeping `cc_num` and `trans_date_trans_time`
+    so the LSTM can build temporal sequences."""
     df = df.copy()
 
     # The raw CSVs occasionally carry a trailing malformed row whose target

@@ -18,7 +18,6 @@ import torch
 from sklearn.metrics import average_precision_score
 from torch.utils.data import DataLoader
 
-from fraud.data import feature_engineering, load_raw_csv, temporal_split
 from fraud.evaluation import (
     compute_metrics,
     format_report,
@@ -29,7 +28,10 @@ from fraud.evaluation import (
 from fraud.preprocessing import (
     FEATURE_COLS,
     build_preprocessor,
+    feature_engineering,
+    load_raw_csv,
     save_preprocessor,
+    temporal_split,
 )
 from fraud.utils import save_json, set_seed
 

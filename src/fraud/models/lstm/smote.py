@@ -8,9 +8,9 @@ fill all positions.
 Caveat: interpolation in flat-window space can produce temporally
 implausible sequences (e.g., merchant identity drifting mid-sequence). This
 is the LSTM analogue of the same caveat that already shows up in the
-literature for "RNN + SMOTE", and the legacy notebook found SMOTE actively
-hurt classic models. Running this configuration tests whether the same
-finding holds for the LSTM.
+literature for "RNN + SMOTE", and SMOTE was previously found to actively
+hurt the classic baselines on this dataset. Running this configuration
+tests whether the same finding holds for the LSTM.
 """
 from __future__ import annotations
 

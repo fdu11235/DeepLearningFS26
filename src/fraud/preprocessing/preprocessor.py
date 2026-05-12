@@ -1,6 +1,6 @@
 """sklearn ColumnTransformer for the fraud features.
 
-Mirrors the legacy notebook's column groups exactly:
+Column groups:
   * Numerical (StandardScaler): amt, city_pop, age, hour/weekday/month sin-cos
   * Low-cardinality (OneHotEncoder, drop="first"): gender, state, category, is_weekend
   * High-cardinality (TargetEncoder, smooth="auto"): merchant, job, city, zip

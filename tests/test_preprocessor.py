@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from fraud.data.feature_engineering import feature_engineering
-from fraud.preprocessing import FEATURE_COLS, build_preprocessor
+from fraud.preprocessing import FEATURE_COLS, build_preprocessor, feature_engineering
 
 
 def _toy_df(n: int = 50, seed: int = 0):

@@ -1,8 +1,8 @@
 """Time-based train/validation split.
 
-The legacy notebook used a random stratified split, which leaks future
-patterns into training. For the LSTM we use a chronological cutoff so the
-validation set always lies after training in time — closer to deployment.
+A random stratified split would leak future patterns into training. We use a
+chronological cutoff so the validation set always lies after training in
+time — closer to deployment.
 """
 from __future__ import annotations
 

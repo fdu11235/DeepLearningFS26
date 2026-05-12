@@ -1,4 +1,4 @@
-"""Classification metrics matching the legacy notebook (ROC-AUC, PR-AUC, P/R/F1)."""
+"""Classification metrics for the fraud task (ROC-AUC, PR-AUC, P/R/F1)."""
 from __future__ import annotations
 
 from typing import Any
